@@ -328,18 +328,20 @@ def user_management_ui(request):
 # ------------------------------- User Login ----------------------------------------
 
 class UserLoginView(APIView):
-    permission_classes = [AllowAny]  # Allow login without authentication
+    permission_classes = [AllowAny]
 
     def post(self, request):
-        username = request.data.get("username")
+        phone_number = request.data.get("phone_number")
         password = request.data.get("password")
 
-        user = authenticate(username=username, password=password)
+        if not phone_number or not password:
+            return Response({"error": "Phone number and password are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        if user is not None:
-            token, created = Token.objects.get_or_create(user=user)
+        user = authenticate(request, phone_number=phone_number, password=password)
 
-            # Fetch additional user details
+        if user:
+            token, _ = Token.objects.get_or_create(user=user)
+
             user_data = {
                 "token": token.key,
                 "id": user.id,
@@ -347,11 +349,11 @@ class UserLoginView(APIView):
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-                "role": "admin" if user.is_staff else "user",  # Assign role
+                "role": "admin" if user.is_staff else "user",
                 "is_active": user.is_active,
-                "date_joined": user.date_joined,
-                "phone_number": getattr(user, "phone_number", ""),  # Get custom fields
-                "address": getattr(user, "address", "")
+                "date_joined": user.date_joined.strftime("%Y-%m-%d %H:%M:%S"),
+                "phone_number": user.phone_number,
+                "address": user.address if hasattr(user, "address") else "",
             }
 
             return Response(user_data, status=status.HTTP_200_OK)

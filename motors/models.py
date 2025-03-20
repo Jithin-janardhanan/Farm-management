@@ -1,5 +1,7 @@
+# models.py
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+
 
 class Motor(models.Model):
     TYPE_CHOICES = [
@@ -29,24 +31,11 @@ class Motor(models.Model):
     class Meta:
         ordering = ['-created_at']
 
-    def update_status(self):
-        """Update motor status based on valve states."""
-        if self.valves.filter(value="1").exists():
-            self.STATUS = "Working"
-        else:
-            self.STATUS = "Idle"
-        self.save()
 
 class Valve(models.Model):
-    VALVE_STATUS_CHOICES = [
-        ('0', 'Off'),
-        ('1', 'On'),
-    ]
-
     motor = models.ForeignKey(Motor, related_name='valves', on_delete=models.CASCADE)
     valve_number = models.PositiveIntegerField()
-    value = models.CharField(max_length=10, choices=VALVE_STATUS_CHOICES, default="0")
-    last_operated_at = models.DateTimeField(auto_now=True)
+    value = models.CharField(max_length=10, default="0")
 
     class Meta:
         unique_together = ('motor', 'valve_number')
@@ -54,8 +43,3 @@ class Valve(models.Model):
 
     def __str__(self):
         return f"Valve {self.valve_number} of Motor {self.motor.name}"
-
-    def save(self, *args, **kwargs):
-        """Save the valve and update the motor status."""
-        super().save(*args, **kwargs)
-        self.motor.update_status()

@@ -31,6 +31,9 @@ urlpatterns = [
     path('userprofileview/',UserProfileView.as_view(),name='userprofile-view'),
 
 
+
+
+
     #---------------------user profile view-----------------------
 
 

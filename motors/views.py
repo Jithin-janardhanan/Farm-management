@@ -71,8 +71,6 @@ class MotorRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         # Return the updated motor data
         result = self.get_serializer(motor)
         return Response(result.data)
-
-
 # Valve related views
 class ValveListView(generics.ListAPIView):
     serializer_class = ValveSerializer
@@ -175,75 +173,8 @@ class ValveStatusView(APIView):
 
         return Response(status_data)
 
-def motor_managment(request):
-    return render(request,'motor_managment.html')
-# views.py (partial - MotorListCreateView)
-# from rest_framework import generics, status
-# from rest_framework.response import Response
-# from .models import Motor, Valve
-# from .serializers import MotorSerializer
-#
-#
-# class MotorListCreateView(generics.ListCreateAPIView):
-#     queryset = Motor.objects.all()
-#     serializer_class = MotorSerializer
-#
-#     def create(self, request, *args, **kwargs):
-#         serializer = self.get_serializer(data=request.data)
-#         serializer.is_valid(raise_exception=True)
-#         motor = serializer.save()
-#
-#         # Double-check that all valves are created
-#         vcount = motor.VCOUNT
-#         existing_valve_count = Valve.objects.filter(motor=motor).count()
-#
-#         # Create missing valves if any
-#         if existing_valve_count < vcount:
-#             existing_valve_numbers = set(Valve.objects.filter(motor=motor).values_list('valve_number', flat=True))
-#             for i in range(1, vcount + 1):
-#                 if i not in existing_valve_numbers:
-#                     Valve.objects.create(
-#                         motor=motor,
-#                         valve_number=i,
-#                         value="0"  # Default value
-#                     )
-#
-#         # Return the full motor data including all valves
-#         result = self.get_serializer(motor)
-#         headers = self.get_success_headers(serializer.data)
-#         return Response(result.data, status=status.HTTP_201_CREATED, headers=headers)
-#
-#
-# class MotorRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Motor.objects.all()
-#     serializer_class = MotorSerializer
-#
-#     def update(self, request, *args, **kwargs):
-#         partial = kwargs.pop('partial', False)
-#         instance = self.get_object()
-#         old_vcount = instance.VCOUNT
-#
-#         serializer = self.get_serializer(instance, data=request.data, partial=partial)
-#         serializer.is_valid(raise_exception=True)
-#         motor = serializer.save()
-#
-#         # Handle valve count changes
-#         new_vcount = motor.VCOUNT
-#
-#         # Create any missing valves if VCOUNT was increased/changed
-#         existing_valve_numbers = set(Valve.objects.filter(motor=motor).values_list('valve_number', flat=True))
-#         for i in range(1, new_vcount + 1):
-#             if i not in existing_valve_numbers:
-#                 Valve.objects.create(
-#                     motor=motor,
-#                     valve_number=i,
-#                     value="0"  # Default value
-#                 )
-#
-#         # Remove extra valves if VCOUNT was reduced
-#         if new_vcount < old_vcount:
-#             Valve.objects.filter(motor=motor, valve_number__gt=new_vcount).delete()
-#
-#         # Return the updated motor data
-#         result = self.get_serializer(motor)
-#         return Response(result.data)
+
+from django.shortcuts import render
+
+def motor_management(request):
+    return render(request, 'motor_managment.html')
