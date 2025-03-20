@@ -316,9 +316,16 @@ class UserRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
+def user_management_ui(request):
+    # Render the HTML template
+    return render(request, 'users_managment.html')
+
+# -------------------------------USER SIDE API----------------------------------------
 
 
-# -------------------------------userlogin----------------------------------------
+
+
+# ------------------------------- User Login ----------------------------------------
 
 class UserLoginView(APIView):
     permission_classes = [AllowAny]  # Allow login without authentication
@@ -331,16 +338,51 @@ class UserLoginView(APIView):
 
         if user is not None:
             token, created = Token.objects.get_or_create(user=user)
-            return Response({
+
+            # Fetch additional user details
+            user_data = {
                 "token": token.key,
-                "user_id": user.id,
-                "username": user.username
-            }, status=status.HTTP_200_OK)
-        else:
-            return Response({"error": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "role": "admin" if user.is_staff else "user",  # Assign role
+                "is_active": user.is_active,
+                "date_joined": user.date_joined,
+                "phone_number": getattr(user, "phone_number", ""),  # Get custom fields
+                "address": getattr(user, "address", "")
+            }
 
-# ----------------------------userlogout-------------------------------------
+            return Response(user_data, status=status.HTTP_200_OK)
 
+        return Response({"error": "Invalid Credentials"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ---------------------------- User Profile (Fetch Current User Data) -------------------------------------
+
+class UserProfileView(APIView):
+    permission_classes = [AllowAny]  # Only logged-in users can access
+
+    def get(self, request):
+        user = request.user
+
+        user_data = {
+            "id": user.id,
+            "username": user.username,
+            "email": user.email,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "role": "admin" if user.is_staff else "user",
+            "is_active": user.is_active,
+            "date_joined": user.date_joined,
+            "phone_number": getattr(user, "phone_number", ""),
+            "address": getattr(user, "address", "")
+        }
+
+        return Response(user_data, status=status.HTTP_200_OK)
+
+# ---------------------------- User Logout -------------------------------------
 
 class UserLogoutView(APIView):
     permission_classes = [IsAuthenticated]  # Only logged-in users can log out
@@ -355,8 +397,9 @@ class UserLogoutView(APIView):
 
 
 
-def user_management_ui(request):
-    # Render the HTML template
-    return render(request, 'users_managment.html')
+
+
+
+
 
 
