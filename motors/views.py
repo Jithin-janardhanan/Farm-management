@@ -1,5 +1,4 @@
 # views.py
-from django.shortcuts import render
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -71,6 +70,8 @@ class MotorRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
         # Return the updated motor data
         result = self.get_serializer(motor)
         return Response(result.data)
+
+
 # Valve related views
 class ValveListView(generics.ListAPIView):
     serializer_class = ValveSerializer
@@ -172,9 +173,3 @@ class ValveStatusView(APIView):
             }
 
         return Response(status_data)
-
-
-from django.shortcuts import render
-
-def motor_management(request):
-    return render(request, 'motor_managment.html')
