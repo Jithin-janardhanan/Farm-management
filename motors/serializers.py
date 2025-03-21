@@ -1,3 +1,4 @@
+# serializers.py
 from rest_framework import serializers
 from .models import Motor, Valve
 
@@ -15,8 +16,7 @@ class ValveSerializer(serializers.ModelSerializer):
 
 class MotorSerializer(serializers.ModelSerializer):
     valves = ValveSerializer(many=True, read_only=True)
-
-    # Fields for setting valve values when creating or updating a motor
+    # These fields are optional for creating specific valve values
     V1 = serializers.CharField(write_only=True, required=False, default="0")
     V2 = serializers.CharField(write_only=True, required=False, default="0")
     V3 = serializers.CharField(write_only=True, required=False, default="0")
@@ -36,50 +36,68 @@ class MotorSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
 
     def create(self, validated_data):
-        valve_data = {f'V{i}': validated_data.pop(f'V{i}', "0") for i in range(1, 11)}
+        # Extract valve data
+        valve_data = {}
+        for i in range(1, 11):
+            key = f'V{i}'
+            if key in validated_data:
+                valve_data[i] = validated_data.pop(key)
 
         # Create the motor
         motor = Motor.objects.create(**validated_data)
 
-        # Create valves based on VCOUNT
+        # Create valves based on VCOUNT - ensure all valves up to VCOUNT are created
         vcount = int(validated_data.get('VCOUNT', 0))
 
         for i in range(1, vcount + 1):
+            value = valve_data.get(i, "0")  # Default to "0" if not specified
             Valve.objects.create(
                 motor=motor,
                 valve_number=i,
-                value=valve_data[f'V{i}']
+                value=value
             )
-
-        # Ensure motor status is updated
-        motor.update_status()
 
         return motor
 
     def update(self, instance, validated_data):
-        valve_data = {f'V{i}': validated_data.pop(f'V{i}', "0") for i in range(1, 11)}
+        # Extract valve data
+        valve_data = {}
+        for i in range(1, 11):
+            key = f'V{i}'
+            if key in validated_data:
+                valve_data[i] = validated_data.pop(key)
 
+        # Update the motor instance
         old_vcount = instance.VCOUNT
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
 
+        # Get the new VCOUNT
         new_vcount = instance.VCOUNT
 
         # Update existing valves or create new ones
         for i in range(1, new_vcount + 1):
-            if f'V{i}' in valve_data:
-                Valve.objects.update_or_create(
+            if i in valve_data:
+                valve, created = Valve.objects.update_or_create(
                     motor=instance,
                     valve_number=i,
-                    defaults={'value': valve_data[f'V{i}']}
+                    defaults={'value': valve_data[i]}
+                )
+
+        # Create any missing valves if VCOUNT was increased
+        existing_valve_numbers = set(Valve.objects.filter(motor=instance).values_list('valve_number', flat=True))
+        for i in range(1, new_vcount + 1):
+            if i not in existing_valve_numbers:
+                value = valve_data.get(i, "0")  # Default to "0" if not specified
+                Valve.objects.create(
+                    motor=instance,
+                    valve_number=i,
+                    value=value
                 )
 
         # Remove extra valves if VCOUNT was reduced
         if new_vcount < old_vcount:
             Valve.objects.filter(motor=instance, valve_number__gt=new_vcount).delete()
-
-        # Ensure motor status is updated
-        instance.update_status()
 
         return instance

@@ -6,7 +6,7 @@ from .views import (
     ValveListView,
     ValveAddView,
     ValveControlView,
-    ValveStatusView, motor_managment
+    ValveStatusView,  motor_management
 )
 
 urlpatterns = [
@@ -21,5 +21,5 @@ urlpatterns = [
     path('motors/<int:motor_id>/valve-status/', ValveStatusView.as_view(), name='valve-status'),
 
 
-    path('motor_managment/',motor_managment,name='motor-managment')
+    path('motor-management/', motor_management, name='motor_management'),
 ]

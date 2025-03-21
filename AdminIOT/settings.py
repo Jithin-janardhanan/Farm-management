@@ -152,4 +152,8 @@ AUTH_USER_MODEL = 'accounts.User'
 # Not recommended to store plaintext passwords
 MASTER_ADMIN_PASSWORD = 'your_secure_password_here'
 
+AUTHENTICATION_BACKENDS = [
+    'accounts.authentication.PhoneNumberBackend',  # Custom authentication backend
+    'django.contrib.auth.backends.ModelBackend',  # Default username authentication
+]
 
