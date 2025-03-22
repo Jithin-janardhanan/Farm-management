@@ -30,7 +30,7 @@ class MotorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Motor
-        fields = ['id', 'name', 'UIN', 'TYPE', 'VCOUNT', 'STATUS', 'LOCATION',
+        fields = ['id', 'name', 'UIN', 'TYPE', 'VCOUNT', 'STATUS',
                   'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10',
                   'valves', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']

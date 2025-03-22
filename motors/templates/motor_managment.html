@@ -188,7 +188,6 @@
                             <th>Type</th>
                             <th>Valve Count</th>
                             <th>Status</th>
-                            <th>Location</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -247,10 +246,6 @@
                                 <option value="Idle">Idle</option>
                             </select>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <label for="LOCATION" class="form-label">Location</label>
-                            <input type="text" class="form-control" id="LOCATION" name="LOCATION" required>
-                        </div>
                     </div>
                 </div>
 
@@ -281,7 +276,6 @@
                         <div class="mb-2"><strong>UIN:</strong> <span id="detailUIN"></span></div>
                         <div class="mb-2"><strong>Type:</strong> <span id="detailType"></span></div>
                         <div class="mb-2"><strong>Status:</strong> <span id="detailStatus"></span></div>
-                        <div class="mb-2"><strong>Location:</strong> <span id="detailLocation"></span></div>
                         <div class="mb-2"><strong>Created:</strong> <span id="detailCreated"></span></div>
                         <div class="mb-2"><strong>Last Updated:</strong> <span id="detailUpdated"></span></div>
                     </div>
@@ -373,7 +367,6 @@
                     TYPE: $('#TYPE').val(),
                     VCOUNT: parseInt($('#VCOUNT').val()),
                     STATUS: $('#STATUS').val(),
-                    LOCATION: $('#LOCATION').val(),
                     valves: [] // Initialize valves array
                 };
 
@@ -455,7 +448,7 @@
                             <td>${typeDisplay}</td>
                             <td>${motor.VCOUNT}</td>
                             <td><span class="status-badge ${statusClass}">${motor.STATUS}</span></td>
-                            <td>${motor.LOCATION}</td>
+
                             <td>
                                 <div class="action-buttons">
                                     <button class="btn btn-info btn-sm view-motor" data-id="${motor.id}">View</button>
@@ -497,7 +490,6 @@
                         $('#detailUIN').text(motor.UIN);
                         $('#detailType').text(motor.TYPE === 'REQ' ? 'Required' : 'Optional');
                         $('#detailStatus').text(motor.STATUS);
-                        $('#detailLocation').text(motor.LOCATION);
                         $('#detailCreated').text(new Date(motor.created_at).toLocaleString());
                         $('#detailUpdated').text(new Date(motor.updated_at).toLocaleString());
 
@@ -629,7 +621,6 @@
                         $('#TYPE').val(motor.TYPE);
                         $('#VCOUNT').val(motor.VCOUNT);
                         $('#STATUS').val(motor.STATUS);
-                        $('#LOCATION').val(motor.LOCATION);
 
                         // Update valve inputs
                         updateValveInputs();

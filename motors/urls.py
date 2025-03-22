@@ -1,12 +1,14 @@
 # urls.py
 from django.urls import path
+from django.views.generic import TemplateView
+
 from .views import (
     MotorListCreateView,
     MotorRetrieveUpdateDestroyView,
     ValveListView,
     ValveAddView,
     ValveControlView,
-    ValveStatusView,  motor_management
+    ValveStatusView,
 )
 
 urlpatterns = [
@@ -21,5 +23,6 @@ urlpatterns = [
     path('motors/<int:motor_id>/valve-status/', ValveStatusView.as_view(), name='valve-status'),
 
 
-    path('motor-management/', motor_management, name='motor_management'),
+    path('motor-managment/', TemplateView.as_view(template_name="motor_managment.html"), name='motor_management'),
+
 ]
