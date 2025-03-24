@@ -1,4 +1,590 @@
 
+<!--<!DOCTYPE html>-->
+<!--<html lang="en">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>Motor Management System</title>-->
+<!--    <style>-->
+<!--        :root {-->
+<!--            &#45;&#45;primary-color: #3498db;-->
+<!--            &#45;&#45;secondary-color: #2c3e50;-->
+<!--            &#45;&#45;success-color: #2ecc71;-->
+<!--            &#45;&#45;danger-color: #e74c3c;-->
+<!--            &#45;&#45;warning-color: #f39c12;-->
+<!--            &#45;&#45;light-color: #ecf0f1;-->
+<!--            &#45;&#45;dark-color: #34495e;-->
+<!--            &#45;&#45;idle-color: #95a5a6;-->
+<!--            &#45;&#45;working-color: #27ae60;-->
+<!--        }-->
+
+<!--        * {-->
+<!--            box-sizing: border-box;-->
+<!--            margin: 0;-->
+<!--            padding: 0;-->
+<!--        }-->
+
+<!--        body {-->
+<!--            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;-->
+<!--            line-height: 1.6;-->
+<!--            color: #333;-->
+<!--            background-color: #f8f9fa;-->
+<!--            padding: 0;-->
+<!--            margin: 0;-->
+<!--        }-->
+
+<!--        .container {-->
+<!--            width: 100%;-->
+<!--            max-width: 1200px;-->
+<!--            margin: 0 auto;-->
+<!--            padding: 20px;-->
+<!--        }-->
+
+<!--        .header {-->
+<!--            background-color: var(&#45;&#45;secondary-color);-->
+<!--            color: white;-->
+<!--            padding: 1rem;-->
+<!--            text-align: center;-->
+<!--        }-->
+
+<!--        .card {-->
+<!--            background: white;-->
+<!--            border-radius: 8px;-->
+<!--            box-shadow: 0 2px 10px rgba(0,0,0,0.1);-->
+<!--            margin-bottom: 20px;-->
+<!--            overflow: hidden;-->
+<!--        }-->
+
+<!--        .card-header {-->
+<!--            background-color: var(&#45;&#45;primary-color);-->
+<!--            color: white;-->
+<!--            padding: 15px;-->
+<!--            font-weight: bold;-->
+<!--        }-->
+
+<!--        .card-body {-->
+<!--            padding: 20px;-->
+<!--        }-->
+
+<!--        .form-group {-->
+<!--            margin-bottom: 15px;-->
+<!--        }-->
+
+<!--        label {-->
+<!--            display: block;-->
+<!--            margin-bottom: 5px;-->
+<!--            font-weight: 500;-->
+<!--        }-->
+
+<!--        input, select {-->
+<!--            width: 100%;-->
+<!--            padding: 10px;-->
+<!--            border: 1px solid #ddd;-->
+<!--            border-radius: 4px;-->
+<!--            font-size: 16px;-->
+<!--        }-->
+
+<!--        button {-->
+<!--            background-color: var(&#45;&#45;primary-color);-->
+<!--            color: white;-->
+<!--            border: none;-->
+<!--            padding: 10px 15px;-->
+<!--            border-radius: 4px;-->
+<!--            cursor: pointer;-->
+<!--            font-size: 16px;-->
+<!--            transition: background-color 0.3s;-->
+<!--        }-->
+
+<!--        button:hover {-->
+<!--            background-color: #2980b9;-->
+<!--        }-->
+
+<!--        .btn-success {-->
+<!--            background-color: var(&#45;&#45;success-color);-->
+<!--        }-->
+
+<!--        .btn-success:hover {-->
+<!--            background-color: #27ae60;-->
+<!--        }-->
+
+<!--        .btn-danger {-->
+<!--            background-color: var(&#45;&#45;danger-color);-->
+<!--        }-->
+
+<!--        .btn-danger:hover {-->
+<!--            background-color: #c0392b;-->
+<!--        }-->
+
+<!--        .btn-warning {-->
+<!--            background-color: var(&#45;&#45;warning-color);-->
+<!--        }-->
+
+<!--        .btn-warning:hover {-->
+<!--            background-color: #e67e22;-->
+<!--        }-->
+
+<!--        .motor-list {-->
+<!--            display: grid;-->
+<!--            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));-->
+<!--            gap: 20px;-->
+<!--        }-->
+
+<!--        .motor-card {-->
+<!--            border: 1px solid #ddd;-->
+<!--            border-radius: 8px;-->
+<!--            background-color: white;-->
+<!--            box-shadow: 0 2px 5px rgba(0,0,0,0.1);-->
+<!--        }-->
+
+<!--        .motor-header {-->
+<!--            display: flex;-->
+<!--            justify-content: space-between;-->
+<!--            align-items: center;-->
+<!--            padding: 15px;-->
+<!--            background-color: var(&#45;&#45;secondary-color);-->
+<!--            color: white;-->
+<!--            border-top-left-radius: 8px;-->
+<!--            border-top-right-radius: 8px;-->
+<!--        }-->
+
+<!--        .motor-body {-->
+<!--            padding: 15px;-->
+<!--        }-->
+
+<!--        .motor-footer {-->
+<!--            padding: 15px;-->
+<!--            display: flex;-->
+<!--            justify-content: space-between;-->
+<!--            background-color: #f8f9fa;-->
+<!--            border-top: 1px solid #ddd;-->
+<!--        }-->
+
+<!--        .valve-list {-->
+<!--            margin-top: 15px;-->
+<!--        }-->
+
+<!--        .valve-item {-->
+<!--            display: flex;-->
+<!--            justify-content: space-between;-->
+<!--            align-items: center;-->
+<!--            padding: 10px;-->
+<!--            border: 1px solid #ddd;-->
+<!--            border-radius: 4px;-->
+<!--            margin-bottom: 8px;-->
+<!--        }-->
+
+<!--        .valve-item:last-child {-->
+<!--            margin-bottom: 0;-->
+<!--        }-->
+
+<!--        .valve-controls {-->
+<!--            display: flex;-->
+<!--            gap: 5px;-->
+<!--        }-->
+
+<!--        .status-badge {-->
+<!--            display: inline-block;-->
+<!--            padding: 3px 10px;-->
+<!--            border-radius: 12px;-->
+<!--            font-size: 14px;-->
+<!--            color: white;-->
+<!--        }-->
+
+<!--        .status-working {-->
+<!--            background-color: var(&#45;&#45;working-color);-->
+<!--        }-->
+
+<!--        .status-idle {-->
+<!--            background-color: var(&#45;&#45;idle-color);-->
+<!--        }-->
+
+<!--        .status-on {-->
+<!--            background-color: var(&#45;&#45;success-color);-->
+<!--        }-->
+
+<!--        .status-off {-->
+<!--            background-color: var(&#45;&#45;danger-color);-->
+<!--        }-->
+
+<!--        .add-valve-form {-->
+<!--            margin-top: 15px;-->
+<!--            display: flex;-->
+<!--            gap: 10px;-->
+<!--        }-->
+
+<!--        .add-valve-form input {-->
+<!--            flex: 1;-->
+<!--        }-->
+
+<!--        .toast {-->
+<!--            position: fixed;-->
+<!--            top: 20px;-->
+<!--            right: 20px;-->
+<!--            padding: 15px 20px;-->
+<!--            background-color: var(&#45;&#45;success-color);-->
+<!--            color: white;-->
+<!--            border-radius: 4px;-->
+<!--            box-shadow: 0 2px 10px rgba(0,0,0,0.2);-->
+<!--            opacity: 0;-->
+<!--            transition: opacity 0.3s;-->
+<!--            z-index: 1000;-->
+<!--        }-->
+
+<!--        .toast.show {-->
+<!--            opacity: 1;-->
+<!--        }-->
+
+<!--        .toast.error {-->
+<!--            background-color: var(&#45;&#45;danger-color);-->
+<!--        }-->
+
+<!--        .toast.warning {-->
+<!--            background-color: var(&#45;&#45;warning-color);-->
+<!--        }-->
+
+<!--        .loading {-->
+<!--            display: flex;-->
+<!--            justify-content: center;-->
+<!--            align-items: center;-->
+<!--            height: 100px;-->
+<!--        }-->
+
+<!--        .loading::after {-->
+<!--            content: "";-->
+<!--            width: 40px;-->
+<!--            height: 40px;-->
+<!--            border: 5px solid #ddd;-->
+<!--            border-top-color: var(&#45;&#45;primary-color);-->
+<!--            border-radius: 50%;-->
+<!--            animation: spin 1s linear infinite;-->
+<!--        }-->
+
+<!--        @keyframes spin {-->
+<!--            to { transform: rotate(360deg); }-->
+<!--        }-->
+
+<!--        /* Responsive adjustments */-->
+<!--        @media (max-width: 768px) {-->
+<!--            .motor-list {-->
+<!--                grid-template-columns: 1fr;-->
+<!--            }-->
+
+<!--            .motor-footer {-->
+<!--                flex-direction: column;-->
+<!--                gap: 10px;-->
+<!--            }-->
+
+<!--            .motor-footer button {-->
+<!--                width: 100%;-->
+<!--            }-->
+
+<!--            .valve-item {-->
+<!--                flex-direction: column;-->
+<!--                align-items: flex-start;-->
+<!--            }-->
+
+<!--            .valve-controls {-->
+<!--                margin-top: 10px;-->
+<!--                width: 100%;-->
+<!--                justify-content: space-between;-->
+<!--            }-->
+
+<!--            .add-valve-form {-->
+<!--                flex-direction: column;-->
+<!--            }-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--    <div class="header">-->
+<!--        <h1>Motor Management System</h1>-->
+<!--    </div>-->
+
+<!--    <div id="toast" class="toast"></div>-->
+
+<!--    <div class="container">-->
+<!--        <div class="card">-->
+<!--            <div class="card-header">Create New Motor</div>-->
+<!--            <div class="card-body">-->
+<!--                <form id="create-motor-form">-->
+<!--                    <div class="form-group">-->
+<!--                        <label for="name">Motor Name:</label>-->
+<!--                        <input type="text" id="name" name="name" required>-->
+<!--                    </div>-->
+
+<!--                    <div class="form-group">-->
+<!--                        <label for="uin">UIN:</label>-->
+<!--                        <input type="text" id="uin" name="UIN" required>-->
+<!--                    </div>-->
+
+<!--                    <div class="form-group">-->
+<!--                        <label for="type">Type:</label>-->
+<!--                        <select id="type" name="TYPE" required>-->
+<!--                            <option value="REQ">Required</option>-->
+<!--                            <option value="OPT">Optional</option>-->
+<!--                        </select>-->
+<!--                    </div>-->
+
+<!--                    <div class="form-group">-->
+<!--                        <label for="vcount">Valve Count (0-10):</label>-->
+<!--                        <input type="number" id="vcount" name="VCOUNT" min="0" max="10" value="0" required>-->
+<!--                    </div>-->
+
+<!--                    <button type="submit">Create Motor</button>-->
+<!--                </form>-->
+<!--            </div>-->
+<!--        </div>-->
+
+<!--        <h2>Motors</h2>-->
+<!--        <div id="motor-loading" class="loading"></div>-->
+<!--        <div id="motor-list" class="motor-list"></div>-->
+<!--    </div>-->
+
+<!--    <script>-->
+<!--        // Utility functions-->
+<!--        function showToast(message, type = 'success') {-->
+<!--            const toast = document.getElementById('toast');-->
+<!--            toast.textContent = message;-->
+<!--            toast.className = 'toast show';-->
+<!--            if (type) {-->
+<!--                toast.classList.add(type);-->
+<!--            }-->
+
+<!--            setTimeout(() => {-->
+<!--                toast.classList.remove('show');-->
+<!--                setTimeout(() => {-->
+<!--                    toast.className = 'toast';-->
+<!--                }, 300);-->
+<!--            }, 3000);-->
+<!--        }-->
+
+<!--        async function fetchWithErrorHandling(url, options = {}) {-->
+<!--            try {-->
+<!--                const response = await fetch(url, options);-->
+
+<!--                if (!response.ok) {-->
+<!--                    const errorData = await response.json().catch(() => ({}));-->
+<!--                    const errorMessage = errorData.error || `Failed with status: ${response.status}`;-->
+<!--                    showToast(errorMessage, 'error');-->
+<!--                    throw new Error(errorMessage);-->
+<!--                }-->
+
+<!--                return response;-->
+<!--            } catch (error) {-->
+<!--                console.error('API Error:', error);-->
+<!--                if (!error.message.includes('Failed with status')) {-->
+<!--                    showToast('Network error. Please check your connection.', 'error');-->
+<!--                }-->
+<!--                throw error;-->
+<!--            }-->
+<!--        }-->
+
+<!--        // CSRF Token handling for Django-->
+<!--        function getCSRFToken() {-->
+<!--            const cookieValue = document.cookie-->
+<!--                .split('; ')-->
+<!--                .find(row => row.startsWith('csrftoken='))-->
+<!--                ?.split('=')[1];-->
+<!--            return cookieValue || '';-->
+<!--        }-->
+
+<!--        // Add CSRF token to all requests-->
+<!--        function getRequestOptions(method = 'GET', data = null) {-->
+<!--            const options = {-->
+<!--                method,-->
+<!--                headers: {-->
+<!--                    'X-CSRFToken': getCSRFToken(),-->
+<!--                },-->
+<!--            };-->
+
+<!--            if (data && method !== 'GET') {-->
+<!--                options.headers['Content-Type'] = 'application/json';-->
+<!--                options.body = JSON.stringify(data);-->
+<!--            }-->
+
+<!--            return options;-->
+<!--        }-->
+
+<!--        // Motor API functions-->
+<!--        async function fetchMotors() {-->
+<!--            document.getElementById('motor-loading').style.display = 'flex';-->
+<!--            document.getElementById('motor-list').innerHTML = '';-->
+
+<!--            try {-->
+<!--                const response = await fetchWithErrorHandling('/motor/api/motors/');-->
+<!--                const motors = await response.json();-->
+<!--                renderMotorList(motors);-->
+<!--            } catch (error) {-->
+<!--                console.error('Error fetching motors:', error);-->
+<!--            } finally {-->
+<!--                document.getElementById('motor-loading').style.display = 'none';-->
+<!--            }-->
+<!--        }-->
+
+<!--        async function createMotor(formData) {-->
+<!--            try {-->
+<!--                const data = Object.fromEntries(formData.entries());-->
+<!--                data.VCOUNT = parseInt(data.VCOUNT);-->
+
+<!--                await fetchWithErrorHandling('/motor/api/motors/', getRequestOptions('POST', data));-->
+<!--                showToast('Motor created successfully!');-->
+<!--                document.getElementById('create-motor-form').reset();-->
+<!--                await fetchMotors();-->
+<!--            } catch (error) {-->
+<!--                console.error('Error creating motor:', error);-->
+<!--            }-->
+<!--        }-->
+
+<!--        async function deleteMotor(motorId) {-->
+<!--            if (!confirm('Are you sure you want to delete this motor?')) {-->
+<!--                return;-->
+<!--            }-->
+
+<!--            try {-->
+<!--                await fetchWithErrorHandling(`/motor/api/motors/${motorId}/`, getRequestOptions('DELETE'));-->
+<!--                showToast('Motor deleted successfully!');-->
+<!--                await fetchMotors();-->
+<!--            } catch (error) {-->
+<!--                console.error('Error deleting motor:', error);-->
+<!--            }-->
+<!--        }-->
+
+<!--        async function toggleMotorStatus(motorId) {-->
+<!--            try {-->
+<!--                await fetchWithErrorHandling(`/motor/api/motors/${motorId}/toggle-status/`, getRequestOptions('POST'));-->
+<!--                showToast('Motor status toggled successfully!');-->
+<!--                await fetchMotors();-->
+<!--            } catch (error) {-->
+<!--                console.error('Error toggling motor status:', error);-->
+<!--            }-->
+<!--        }-->
+
+<!--        // Valve API functions-->
+<!--        async function addValve(motorId, valveNumber) {-->
+<!--            try {-->
+<!--                await fetchWithErrorHandling(`/motor/api/motors/${motorId}/add-valve/`,-->
+<!--                    getRequestOptions('POST', { valve_number: valveNumber }));-->
+<!--                showToast('Valve added successfully!');-->
+<!--                await fetchMotors();-->
+<!--            } catch (error) {-->
+<!--                console.error('Error adding valve:', error);-->
+<!--            }-->
+<!--        }-->
+
+<!--        async function controlValve(motorId, valveNumber, action) {-->
+<!--            try {-->
+<!--                await fetchWithErrorHandling(`/motor/api/motors/${motorId}/control-valve/${valveNumber}/`,-->
+<!--                    getRequestOptions('POST', { action }));-->
+<!--                showToast(`Valve ${action === 'on' ? 'turned on' : 'turned off'} successfully!`);-->
+<!--                await fetchMotors();-->
+<!--            } catch (error) {-->
+<!--                console.error('Error controlling valve:', error);-->
+<!--            }-->
+<!--        }-->
+
+<!--        // Rendering functions-->
+<!--        function renderMotorList(motors) {-->
+<!--            const motorListElement = document.getElementById('motor-list');-->
+<!--            motorListElement.innerHTML = '';-->
+
+<!--            if (motors.length === 0) {-->
+<!--                motorListElement.innerHTML = '<p>No motors found. Create one to get started!</p>';-->
+<!--                return;-->
+<!--            }-->
+
+<!--            motors.forEach(motor => {-->
+<!--                const motorCard = document.createElement('div');-->
+<!--                motorCard.className = 'motor-card';-->
+
+<!--                const statusDisplay = motor.STATUS === '1' ? 'Working' : 'Idle';-->
+<!--                const statusClass = motor.STATUS === '1' ? 'status-working' : 'status-idle';-->
+
+<!--                motorCard.innerHTML = `-->
+<!--                    <div class="motor-header">-->
+<!--                        <h3>${motor.name}</h3>-->
+<!--                        <span class="status-badge ${statusClass}">${statusDisplay}</span>-->
+<!--                    </div>-->
+<!--                    <div class="motor-body">-->
+<!--                        <p><strong>UIN:</strong> ${motor.UIN}</p>-->
+<!--                        <p><strong>Type:</strong> ${motor.TYPE === 'REQ' ? 'Required' : 'Optional'}</p>-->
+<!--                        <p><strong>Valve Count:</strong> ${motor.VCOUNT}</p>-->
+
+<!--                        <div class="valve-list">-->
+<!--                            <h4>Valves</h4>-->
+<!--                            ${motor.valves.length === 0 ? '<p>No valves available</p>' : ''}-->
+<!--                            ${motor.valves.map(valve => `-->
+<!--                                <div class="valve-item">-->
+<!--                                    <div>-->
+<!--                                        <strong>Valve ${valve.valve_number}</strong>-->
+<!--                                        <span class="status-badge ${valve.status_display.toLowerCase() === 'on' ? 'status-on' : 'status-off'}">-->
+<!--                                            ${valve.status_display}-->
+<!--                                        </span>-->
+<!--                                    </div>-->
+<!--                                    <div class="valve-controls">-->
+<!--                                        <button onclick="controlValve(${motor.id}, ${valve.valve_number}, 'on')" class="btn-success">-->
+<!--                                            Turn On-->
+<!--                                        </button>-->
+<!--                                        <button onclick="controlValve(${motor.id}, ${valve.valve_number}, 'off')" class="btn-danger">-->
+<!--                                            Turn Off-->
+<!--                                        </button>-->
+<!--                                    </div>-->
+<!--                                </div>-->
+<!--                            `).join('')}-->
+<!--                        </div>-->
+
+<!--                        ${motor.VCOUNT < 10 ? `-->
+<!--                            <div class="add-valve-form">-->
+<!--                                <input type="number" id="new-valve-${motor.id}" min="1" max="10" placeholder="Valve Number" required>-->
+<!--                                <button onclick="handleAddValve(${motor.id})">Add Valve</button>-->
+<!--                            </div>-->
+<!--                        ` : ''}-->
+<!--                    </div>-->
+<!--                    <div class="motor-footer">-->
+<!--                        <button onclick="toggleMotorStatus(${motor.id})" class="btn-warning">-->
+<!--                            ${motor.STATUS === '1' ? 'Set Idle' : 'Set Working'}-->
+<!--                        </button>-->
+<!--                        <button onclick="deleteMotor(${motor.id})" class="btn-danger">Delete Motor</button>-->
+<!--                    </div>-->
+<!--                `;-->
+
+<!--                motorListElement.appendChild(motorCard);-->
+<!--            });-->
+<!--        }-->
+
+<!--        // Event handlers-->
+<!--        function handleAddValve(motorId) {-->
+<!--            const valveInput = document.getElementById(`new-valve-${motorId}`);-->
+<!--            const valveNumber = parseInt(valveInput.value);-->
+
+<!--            if (!valveNumber || valveNumber < 1 || valveNumber > 10) {-->
+<!--                showToast('Please enter a valid valve number (1-10)', 'error');-->
+<!--                return;-->
+<!--            }-->
+
+<!--            addValve(motorId, valveNumber);-->
+<!--            valveInput.value = '';-->
+<!--        }-->
+
+<!--        // Form submission handler-->
+<!--        document.getElementById('create-motor-form').addEventListener('submit', async (e) => {-->
+<!--            e.preventDefault();-->
+<!--            const formData = new FormData(e.target);-->
+<!--            await createMotor(formData);-->
+<!--        });-->
+
+<!--        // Expose functions to window for onclick handlers-->
+<!--        window.toggleMotorStatus = toggleMotorStatus;-->
+<!--        window.deleteMotor = deleteMotor;-->
+<!--        window.controlValve = controlValve;-->
+<!--        window.handleAddValve = handleAddValve;-->
+
+<!--        // Initial data load-->
+<!--        document.addEventListener('DOMContentLoaded', () => {-->
+<!--            fetchMotors();-->
+<!--        });-->
+<!--    </script>-->
+<!--</body>-->
+<!--</html>-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
