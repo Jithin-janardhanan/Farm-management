@@ -1,7 +1,6 @@
 # urls.py
 from django.urls import path
 from rest_framework.authtoken.views import obtain_auth_token
-from setuptools.extern import names
 
 from .views import HomeView, admin_login_page, admin_dashboard_page, UserListCreateView, \
     UserRetrieveUpdateDestroyView, user_management_ui, UserLoginView, UserLogoutView, AdminLoginView, AdminSignupView, \
@@ -29,14 +28,6 @@ urlpatterns = [
     path("login/", UserLoginView.as_view(), name="user-login"),
     path("logout/", UserLogoutView.as_view(), name="user-logout"),
     path('userprofileview/',UserProfileView.as_view(),name='userprofile-view'),
-
-
-
-
-
-    #---------------------user profile view-----------------------
-
-
 
 
 ]

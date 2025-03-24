@@ -4,743 +4,1036 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motor Valve Management System</title>
-    <!-- Bootstrap CSS -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
+    <title>Motor Management System</title>
     <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --success-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --light-color: #ecf0f1;
+            --dark-color: #34495e;
+            --idle-color: #95a5a6;
+            --working-color: #27ae60;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
             background-color: #f8f9fa;
+            padding: 0;
+            margin: 0;
         }
+
         .container {
+            width: 100%;
             max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
-        .card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            margin-bottom: 20px;
-        }
-        .tab {
-            cursor: pointer;
-            padding: 10px 15px;
-            border-radius: 4px 4px 0 0;
-            margin-right: 5px;
-        }
-        .tab.active {
-            background-color: #0d6efd;
+
+        .header {
+            background-color: var(--secondary-color);
             color: white;
+            padding: 1rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px;
             font-weight: bold;
         }
-        .tab-content {
-            display: none;
+
+        .card-body {
             padding: 20px;
-            background-color: white;
-            border-radius: 0 4px 4px 4px;
-            border: 1px solid #dee2e6;
         }
-        .tab-content.active {
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
             display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
         }
-        .action-buttons {
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+        }
+
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #c0392b;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+        }
+
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+
+        .motor-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .motor-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: white;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .motor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background-color: var(--secondary-color);
+            color: white;
+            border-top-left-radius: 8px;
+            border-top-right-radius: 8px;
+        }
+
+        .motor-body {
+            padding: 15px;
+        }
+
+        .motor-footer {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            background-color: #f8f9fa;
+            border-top: 1px solid #ddd;
+        }
+
+        .valve-list {
+            margin-top: 15px;
+        }
+
+        .valve-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+
+        .valve-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .valve-controls {
             display: flex;
             gap: 5px;
         }
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
+
+        .status-badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 14px;
+            color: white;
         }
-        #notification {
+
+        .status-working {
+            background-color: var(--working-color);
+        }
+
+        .status-idle {
+            background-color: var(--idle-color);
+        }
+
+        .status-on {
+            background-color: var(--success-color);
+        }
+
+        .status-off {
+            background-color: var(--danger-color);
+        }
+
+        .add-valve-form {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .add-valve-form input {
+            flex: 1;
+        }
+
+        .toast {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 15px;
-            border-radius: 4px;
+            padding: 15px 20px;
+            background-color: var(--success-color);
             color: white;
-            display: none;
+            border-radius: 4px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.3s;
             z-index: 1000;
         }
-        #notification.success {
-            background-color: #28a745;
+
+        .toast.show {
+            opacity: 1;
         }
-        #notification.error {
-            background-color: #dc3545;
+
+        .toast.error {
+            background-color: var(--danger-color);
         }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
+
+        .toast.warning {
+            background-color: var(--warning-color);
         }
-        .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 20px;
-            border-radius: 5px;
-            width: 80%;
-            max-width: 600px;
-        }
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close:hover {
-            color: black;
-        }
-        .valve-button {
-            display: inline-block;
-            margin: 5px;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-align: center;
-            font-weight: bold;
-        }
-        .valve-on {
-            background-color: #28a745;
-            color: white;
-        }
-        .valve-off {
-            background-color: #dc3545;
-            color: white;
-        }
-        #valveControlContainer {
+
+        .loading {
             display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        .valve-input {
-            margin-bottom: 10px;
-            display: flex;
+            justify-content: center;
             align-items: center;
+            height: 100px;
         }
-        .valve-input label {
-            width: 50px;
-            margin-right: 10px;
+
+        .loading::after {
+            content: "";
+            width: 40px;
+            height: 40px;
+            border: 5px solid #ddd;
+            border-top-color: var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
-        #valveInputsContainer {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Navigation */
+        .nav {
+            background-color: var(--dark-color);
+            color: white;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .nav-brand {
+            font-size: 20px;
+            font-weight: bold;
+            padding: 15px 0;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+        }
+
+        .nav-links li {
+            margin-left: 20px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 15px 0;
+            display: inline-block;
+            position: relative;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 10px;
+            left: 0;
+            background-color: white;
+            transition: width 0.3s;
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
+        /* Pages */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            display: inline-block;
+            padding: 8px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .detail-header {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .detail-info {
+            margin-bottom: 20px;
+        }
+
+        .detail-info p {
+            margin-bottom: 10px;
+        }
+
+        .detail-actions {
+            display: flex;
             gap: 10px;
+            margin-bottom: 30px;
         }
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+
+        .back-btn {
+            margin-right: 10px;
+            padding: 8px 15px;
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .detail-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .table th, .table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .table th {
+            background-color: var(--light-color);
             font-weight: bold;
         }
-        .status-Working {
-            background-color: #d4edda;
-            color: #155724;
+
+        .table tr:hover {
+            background-color: #f5f5f5;
         }
-        .status-Maintenance {
-            background-color: #fff3cd;
-            color: #856404;
+
+        /* Mobile navigation */
+        .mobile-nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
         }
-        .status-Failed {
-            background-color: #f8d7da;
-            color: #721c24;
-        }
-        .status-Idle {
-            background-color: #d1ecf1;
-            color: #0c5460;
-        }
-        .form-section {
-            margin-bottom: 20px;
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .motor-list {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+
+            .detail-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .detail-actions button {
+                width: 100%;
+            }
+
+            .nav-container {
+                flex-direction: column;
+                padding: 0;
+            }
+
+            .nav-brand {
+                width: 100%;
+                padding: 15px 20px;
+            }
+
+            .mobile-nav-toggle {
+                display: block;
+                position: absolute;
+                right: 20px;
+                top: 15px;
+            }
+
+            .nav-links {
+                display: none;
+                flex-direction: column;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+            }
+
+            .nav-links.show {
+                display: flex;
+            }
+
+            .nav-links li {
+                margin: 0;
+                width: 100%;
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .nav-links a {
+                padding: 15px 20px;
+                width: 100%;
+                display: block;
+            }
+
+            .table {
+                display: block;
+                overflow-x: auto;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container mt-4">
-        <h1 class="mb-4 text-center">Motor Valve Management System</h1>
+    <div id="toast" class="toast"></div>
 
-        <!-- Tabs -->
-        <div class="d-flex mb-3">
-            <div class="tab active" data-tab="motors">Motors List</div>
-            <div class="tab" data-tab="motorForm">Add New Motor</div>
+    <div class="header">
+        <h1>Motor Management System</h1>
+    </div>
+
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-brand">Dashboard</div>
+            <button class="mobile-nav-toggle">☰</button>
+            <ul class="nav-links">
+                <li><a href="#" class="nav-link active" data-page="motors-list">Motors List</a></li>
+                <li><a href="#" class="nav-link" data-page="add-motor">Add Motor</a></li>
+                <li><a href="#" class="nav-link" data-page="valve-management">Valve Management</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <!-- Motors List Page -->
+        <div id="motors-list" class="page active">
+            <div class="section-header">
+                <h2>Motors Overview</h2>
+                <button class="action-btn" onclick="navigateTo('add-motor')">Add New Motor</button>
+            </div>
+
+            <div id="motor-loading" class="loading"></div>
+            <table class="table" id="motors-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>UIN</th>
+                        <th>Type</th>
+                        <th>Valves</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Motors will be populated here -->
+                </tbody>
+            </table>
         </div>
 
-        <!-- Notification -->
-        <div id="notification"></div>
-
-        <!-- Motors Tab -->
-        <div id="motors" class="tab-content active">
-            <h2>Motors</h2>
-            <div class="mb-3">
-                <button id="refreshMotors" class="btn btn-primary">
-                    <i class="bi bi-arrow-clockwise"></i> Refresh
-                </button>
+        <!-- Add Motor Page -->
+        <div id="add-motor" class="page">
+            <div class="section-header">
+                <h2>Create New Motor</h2>
+                <button class="back-btn" onclick="navigateTo('motors-list')">Back to Motors</button>
             </div>
 
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Name</th>
-                            <th>UIN</th>
-                            <th>Type</th>
-                            <th>Valve Count</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="motorsTableBody">
-                        <!-- Motors will be loaded here -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div id="motorsLoading" class="loading">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p>Loading motors...</p>
-            </div>
-        </div>
-
-        <!-- Motor Form Tab -->
-        <div id="motorForm" class="tab-content">
-            <h2 id="formTitle">Add New Motor</h2>
-
-            <form id="motorCreateForm">
-                <input type="hidden" id="motorId" value="">
-
-                <div class="form-section">
-                    <h4>Basic Information</h4>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="name" class="form-label">Name</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
+            <div class="card">
+                <div class="card-body">
+                    <form id="create-motor-form">
+                        <div class="form-group">
+                            <label for="name">Motor Name:</label>
+                            <input type="text" id="name" name="name" required>
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="UIN" class="form-label">UIN</label>
-                            <input type="text" class="form-control" id="UIN" name="UIN" required>
-                        </div>
-                    </div>
 
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <label for="TYPE" class="form-label">Type</label>
-                            <select class="form-select" id="TYPE" name="TYPE">
+                        <div class="form-group">
+                            <label for="uin">UIN:</label>
+                            <input type="text" id="uin" name="UIN" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="type">Type:</label>
+                            <select id="type" name="TYPE" required>
                                 <option value="REQ">Required</option>
                                 <option value="OPT">Optional</option>
                             </select>
                         </div>
-                        <div class="col-md-3 mb-3">
-                            <label for="VCOUNT" class="form-label">Valve Count</label>
-                            <input type="number" class="form-control" id="VCOUNT" name="VCOUNT" min="0" max="10" value="1" required>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label for="STATUS" class="form-label">Status</label>
-                            <select class="form-select" id="STATUS" name="STATUS">
-                                <option value="Working">Working</option>
-                                <option value="Maintenance">Under Maintenance</option>
-                                <option value="Failed">Failed</option>
-                                <option value="Idle">Idle</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="form-section" id="valvesFormSection">
-                    <h4>Valve Settings</h4>
-                    <div id="valveInputsContainer">
-                        <!-- Valve inputs will be generated here -->
-                    </div>
-                </div>
+                        <div class="form-group">
+                            <label for="vcount">Valve Count (0-10):</label>
+                            <input type="number" id="vcount" name="VCOUNT" min="0" max="10" value="0" required>
+                        </div>
 
-                <div class="d-flex justify-content-end mt-4">
-                    <button type="button" id="cancelBtn" class="btn btn-secondary me-2">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Motor</button>
+                        <button type="submit">Create Motor</button>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
 
-        <!-- Motor Details Modal -->
-        <div id="motorDetailsModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
+        <!-- Motor Detail Page -->
+        <div id="motor-detail" class="page">
+            <div class="section-header">
                 <h2>Motor Details</h2>
+                <button class="back-btn" onclick="navigateTo('motors-list')">Back to Motors</button>
+            </div>
 
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h4>Basic Information</h4>
-                        <div class="mb-2"><strong>Name:</strong> <span id="detailName"></span></div>
-                        <div class="mb-2"><strong>UIN:</strong> <span id="detailUIN"></span></div>
-                        <div class="mb-2"><strong>Type:</strong> <span id="detailType"></span></div>
-                        <div class="mb-2"><strong>Status:</strong> <span id="detailStatus"></span></div>
-                        <div class="mb-2"><strong>Created:</strong> <span id="detailCreated"></span></div>
-                        <div class="mb-2"><strong>Last Updated:</strong> <span id="detailUpdated"></span></div>
-                    </div>
+            <div class="detail-container" id="motor-detail-content">
+                <!-- Motor details will be populated here -->
+            </div>
+        </div>
 
-                    <div class="col-md-6">
-                        <h4>Valve Controls</h4>
-                        <div id="valveControlContainer">
-                            <!-- Valve controls will be loaded here -->
-                        </div>
-                        <div id="valvesLoading" class="loading">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                            </div>
-                            <p>Loading valves...</p>
-                        </div>
+        <!-- Valve Management Page -->
+        <div id="valve-management" class="page">
+            <div class="section-header">
+                <h2>Valve Management</h2>
+            </div>
+
+            <div class="card">
+                <div class="card-header">Select Motor</div>
+                <div class="card-body">
+                    <div class="form-group">
+                        <label for="motor-select">Choose a motor to manage valves:</label>
+                        <select id="motor-select">
+                            <option value="">-- Select Motor --</option>
+                            <!-- Motors will be populated here -->
+                        </select>
                     </div>
                 </div>
+            </div>
+
+            <div id="valve-management-content">
+                <!-- Valve management UI will be populated here after selecting a motor -->
             </div>
         </div>
     </div>
 
-    <!-- jQuery and Bootstrap JS -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
-
-    <!-- Main JavaScript -->
     <script>
-        $(document).ready(function() {
-            // API endpoints
-            const API_URL = '/motor/motors/'; // Update with your actual API base URL
+        // State management
+        let motors = [];
+        let currentMotor = null;
 
-            // Function to get CSRF token from cookies
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
+        // Navigation
+        function navigateTo(pageId, params = {}) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // Show the selected page
+            document.getElementById(pageId).classList.add('active');
+
+            // Add active class to current nav link
+            document.querySelector(`.nav-link[data-page="${pageId}"]`)?.classList.add('active');
+
+            // Handle special page navigation
+            if (pageId === 'motor-detail' && params.motorId) {
+                loadMotorDetail(params.motorId);
             }
 
-            const csrftoken = getCookie('csrftoken');
+            // Reset scroll position
+            window.scrollTo(0, 0);
+        }
 
-            // Set up AJAX headers to include CSRF token
-            $.ajaxSetup({
-                beforeSend: function(xhr, settings) {
-                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
-                        // Only send the token to relative URLs.
-                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                    }
-                }
-            });
+        // Mobile navigation toggle
+        document.querySelector('.mobile-nav-toggle').addEventListener('click', () => {
+            document.querySelector('.nav-links').classList.toggle('show');
+        });
 
-            // Tab functionality
-            $('.tab').on('click', function() {
-                const tabId = $(this).data('tab');
-                $('.tab').removeClass('active');
-                $(this).addClass('active');
-                $('.tab-content').removeClass('active');
-                $('#' + tabId).addClass('active');
-
-                if (tabId === 'motorForm') {
-                    resetForm();
-                }
-            });
-
-            // Load all motors when page loads
-            loadMotors();
-
-            // Listen for changes on VCOUNT to update valve inputs
-            $('#VCOUNT').on('change', function() {
-                updateValveInputs();
-            });
-
-            // Form submission handler
-            $('#motorCreateForm').on('submit', function(e) {
+        // Setup nav links
+        document.querySelectorAll('.nav-link').forEach(link => {
+            link.addEventListener('click', (e) => {
                 e.preventDefault();
-
-                const motorId = $('#motorId').val();
-                const motorData = {
-                    name: $('#name').val(),
-                    UIN: $('#UIN').val(),
-                    TYPE: $('#TYPE').val(),
-                    VCOUNT: parseInt($('#VCOUNT').val()),
-                    STATUS: $('#STATUS').val(),
-                    valves: [] // Initialize valves array
-                };
-
-                // Add valve values to the valves array
-                const vcount = parseInt($('#VCOUNT').val());
-                for (let i = 1; i <= vcount; i++) {
-                    motorData.valves.push({
-                        valve_number: i,
-                        value: $(`#V${i}`).val()
-                    });
-                }
-
-                console.log('Sending motorData:', motorData); // Log the data being sent
-
-                if (motorId) {
-                    // Update existing motor
-                    updateMotor(motorId, motorData);
-                } else {
-                    // Create new motor
-                    createMotor(motorData);
-                }
+                navigateTo(link.dataset.page);
+                document.querySelector('.nav-links').classList.remove('show'); // Hide mobile menu
             });
+        });
 
-            // Refresh button
-            $('#refreshMotors').on('click', function() {
-                loadMotors();
-            });
-
-            // Cancel button handler
-            $('#cancelBtn').on('click', function() {
-                resetForm();
-                // Switch back to motors tab
-                $('.tab[data-tab="motors"]').click();
-            });
-
-            // Close modal when clicking the X or outside the modal
-            $('.close, .modal').on('click', function(e) {
-                if (e.target === this) {
-                    $('.modal').hide();
-                }
-            });
-
-            // Functions for CRUD operations
-            function loadMotors() {
-                showLoading('motorsLoading', true);
-
-                $.ajax({
-                    url: API_URL,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(data) {
-                        displayMotors(data);
-                        showLoading('motorsLoading', false);
-                    },
-                    error: function(xhr, status, error) {
-                        showNotification('Error loading motors: ' + getErrorMessage(xhr), 'error');
-                        showLoading('motorsLoading', false);
-                    }
-                });
+        // Utility functions
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast show';
+            if (type) {
+                toast.classList.add(type);
             }
 
-            function displayMotors(motors) {
-                const tbody = $('#motorsTableBody');
-                tbody.empty();
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toast.className = 'toast';
+                }, 300);
+            }, 3000);
+        }
 
-                if (motors.length === 0) {
-                    tbody.append('<tr><td colspan="7" class="text-center">No motors found</td></tr>');
-                    return;
+        async function fetchWithErrorHandling(url, options = {}) {
+            try {
+                const response = await fetch(url, options);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorMessage = errorData.error || `Failed with status: ${response.status}`;
+                    showToast(errorMessage, 'error');
+                    throw new Error(errorMessage);
                 }
 
-                motors.forEach(function(motor) {
-                    const typeDisplay = motor.TYPE === 'REQ' ? 'Required' : 'Optional';
-                    const statusClass = `status-${motor.STATUS}`;
-
-                    const row = `
-                        <tr>
-                            <td>${motor.name}</td>
-                            <td>${motor.UIN}</td>
-                            <td>${typeDisplay}</td>
-                            <td>${motor.VCOUNT}</td>
-                            <td><span class="status-badge ${statusClass}">${motor.STATUS}</span></td>
-
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn btn-info btn-sm view-motor" data-id="${motor.id}">View</button>
-                                    <button class="btn btn-warning btn-sm edit-motor" data-id="${motor.id}">Edit</button>
-                                    <button class="btn btn-danger btn-sm delete-motor" data-id="${motor.id}">Delete</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                    tbody.append(row);
-                });
-
-                // Attach event handlers to buttons
-                $('.view-motor').on('click', function() {
-                    const motorId = $(this).data('id');
-                    showMotorDetails(motorId);
-                });
-
-                $('.edit-motor').on('click', function() {
-                    const motorId = $(this).data('id');
-                    editMotor(motorId);
-                });
-
-                $('.delete-motor').on('click', function() {
-                    const motorId = $(this).data('id');
-                    if (confirm('Are you sure you want to delete this motor?')) {
-                        deleteMotor(motorId);
-                    }
-                });
-            }
-
-            function showMotorDetails(motorId) {
-                $.ajax({
-                    url: `${API_URL}${motorId}/`,
-                    type: 'GET',
-                    success: function(motor) {
-                        // Fill in the motor details
-                        $('#detailName').text(motor.name);
-                        $('#detailUIN').text(motor.UIN);
-                        $('#detailType').text(motor.TYPE === 'REQ' ? 'Required' : 'Optional');
-                        $('#detailStatus').text(motor.STATUS);
-                        $('#detailCreated').text(new Date(motor.created_at).toLocaleString());
-                        $('#detailUpdated').text(new Date(motor.updated_at).toLocaleString());
-
-                        // Show the modal
-                        $('#motorDetailsModal').show();
-
-                        // Load valve controls
-                        loadValveControls(motorId);
-                    },
-                    error: function(xhr) {
-                        showNotification('Error loading motor details: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
-
-            function loadValveControls(motorId) {
-                showLoading('valvesLoading', true);
-
-                $.ajax({
-                    url: `${API_URL}${motorId}/valve-status/`,
-                    type: 'GET',
-                    success: function(data) {
-                        const container = $('#valveControlContainer');
-                        container.empty();
-
-                        if (!data.valves || Object.keys(data.valves).length === 0) {
-                            container.html('<p>No valves available for this motor</p>');
-                            showLoading('valvesLoading', false);
-                            return;
-                        }
-
-                        // Create valve buttons
-                        Object.keys(data.valves).sort().forEach(function(key) {
-                            const valve = data.valves[key];
-                            const valveNumber = key.replace('V', '');
-                            const isOn = valve.status === 'On';
-
-                            const buttonClass = isOn ? 'valve-button valve-on' : 'valve-button valve-off';
-                            const button = `
-                                <div class="${buttonClass}" data-motor="${motorId}" data-valve="${valveNumber}" data-status="${isOn ? 'on' : 'off'}">
-                                    ${key}: ${valve.status}
-                                </div>
-                            `;
-                            container.append(button);
-                        });
-
-                        // Attach click handlers to valve buttons
-                        $('.valve-button').on('click', function() {
-                            const motorId = $(this).data('motor');
-                            const valveNumber = $(this).data('valve');
-                            const currentStatus = $(this).data('status');
-                            const newAction = currentStatus === 'on' ? 'off' : 'on';
-
-                            controlValve(motorId, valveNumber, newAction, $(this));
-                        });
-
-                        showLoading('valvesLoading', false);
-                    },
-                    error: function(xhr) {
-                        $('#valveControlContainer').html('<p>Error loading valve data</p>');
-                        showLoading('valvesLoading', false);
-                        showNotification('Error loading valve controls: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
-
-            function controlValve(motorId, valveNumber, action, buttonElement) {
-                $.ajax({
-                    url: `${API_URL}${motorId}/control-valve/${valveNumber}/`,
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ action: action }),
-                    success: function(response) {
-                        // Update button appearance
-                        if (action === 'on') {
-                            buttonElement.removeClass('valve-off').addClass('valve-on');
-                            buttonElement.data('status', 'on');
-                            buttonElement.html(`V${valveNumber}: On`);
-                        } else {
-                            buttonElement.removeClass('valve-on').addClass('valve-off');
-                            buttonElement.data('status', 'off');
-                            buttonElement.html(`V${valveNumber}: Off`);
-                        }
-
-                        showNotification(response.message, 'success');
-                    },
-                    error: function(xhr) {
-                        showNotification('Error controlling valve: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
-
-            function createMotor(motorData) {
-                $.ajax({
-                    url: API_URL,
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(motorData),
-                    success: function(response) {
-                        showNotification('Motor created successfully!', 'success');
-                        resetForm();
-                        loadMotors();
-                        $('.tab[data-tab="motors"]').click(); // Switch to motors tab
-                    },
-                    error: function(xhr) {
-                        showNotification('Error creating motor: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
-
-            function editMotor(motorId) {
-                // Switch to motor form tab
-                $('.tab[data-tab="motorForm"]').click();
-
-                // Update form title
-                $('#formTitle').text('Edit Motor');
-
-                // Set motor ID for form submission
-                $('#motorId').val(motorId);
-
-                // Fetch motor data
-                $.ajax({
-                    url: `${API_URL}${motorId}/`,
-                    type: 'GET',
-                    success: function(motor) {
-                        // Fill form with motor data
-                        $('#name').val(motor.name);
-                        $('#UIN').val(motor.UIN);
-                        $('#TYPE').val(motor.TYPE);
-                        $('#VCOUNT').val(motor.VCOUNT);
-                        $('#STATUS').val(motor.STATUS);
-
-                        // Update valve inputs
-                        updateValveInputs();
-
-                        // Fill in valve values if available
-                        setTimeout(function() {
-                            if (motor.valves && motor.valves.length > 0) {
-                                motor.valves.forEach(function(valve) {
-                                    $(`#V${valve.valve_number}`).val(valve.value);
-                                });
-                            }
-                        }, 100);
-                    },
-                    error: function(xhr) {
-                        showNotification('Error loading motor data: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
-
-            function updateMotor(motorId, motorData) {
-                $.ajax({
-                    url: `${API_URL}${motorId}/`,
-                    type: 'PUT',
-                    contentType: 'application/json',
-                    data: JSON.stringify(motorData),
-                    success: function(response) {
-                        showNotification('Motor updated successfully!', 'success');
-                        resetForm();
-                        loadMotors();
-                        $('.tab[data-tab="motors"]').click(); // Switch to motors tab
-                    },
-                    error: function(xhr) {
-                        showNotification('Error updating motor: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
-
-            function deleteMotor(motorId) {
-                $.ajax({
-                    url: `${API_URL}${motorId}/`,
-                    type: 'DELETE',
-                    success: function() {
-                        showNotification('Motor deleted successfully!', 'success');
-                        loadMotors();
-                    },
-                    error: function(xhr) {
-                        showNotification('Error deleting motor: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
-
-            function updateValveInputs() {
-                const vcount = parseInt($('#VCOUNT').val()) || 0;
-                const container = $('#valveInputsContainer');
-                container.empty();
-
-                if (vcount === 0) {
-                    $('#valvesFormSection').hide();
-                    return;
+                return response;
+            } catch (error) {
+                console.error('API Error:', error);
+                if (!error.message.includes('Failed with status')) {
+                    showToast('Network error. Please check your connection.', 'error');
                 }
+                throw error;
+            }
+        }
 
-                $('#valvesFormSection').show();
+        // CSRF Token handling for Django
+        function getCSRFToken() {
+            const cookieValue = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('csrftoken='))
+                ?.split('=')[1];
+            return cookieValue || '';
+        }
 
-                for (let i = 1; i <= vcount; i++) {
-                    const valveInput = `
-                        <div class="valve-input">
-                            <label for="V${i}">V${i}:</label>
-                            <select class="form-select" id="V${i}" name="V${i}">
-                                <option value="0">Off</option>
-                                <option value="1">On</option>
-                            </select>
+        // Add CSRF token to all requests
+        function getRequestOptions(method = 'GET', data = null) {
+            const options = {
+                method,
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                },
+            };
+
+            if (data && method !== 'GET') {
+                options.headers['Content-Type'] = 'application/json';
+                options.body = JSON.stringify(data);
+            }
+
+            return options;
+        }
+
+        // API Functions
+        async function fetchMotors() {
+            document.getElementById('motor-loading').style.display = 'flex';
+
+            try {
+                const response = await fetchWithErrorHandling('/motor/api/motors/');
+                motors = await response.json();
+                renderMotorsTable();
+                updateMotorSelect();
+                return motors;
+            } catch (error) {
+                console.error('Error fetching motors:', error);
+            } finally {
+                document.getElementById('motor-loading').style.display = 'none';
+            }
+        }
+
+        async function createMotor(formData) {
+            try {
+                const data = Object.fromEntries(formData.entries());
+                data.VCOUNT = parseInt(data.VCOUNT);
+
+                await fetchWithErrorHandling('/motor/api/motors/', getRequestOptions('POST', data));
+                showToast('Motor created successfully!');
+                document.getElementById('create-motor-form').reset();
+                await fetchMotors();
+                navigateTo('motors-list');
+            } catch (error) {
+                console.error('Error creating motor:', error);
+            }
+        }
+
+        async function deleteMotor(motorId) {
+            if (!confirm('Are you sure you want to delete this motor?')) {
+                return;
+            }
+
+            try {
+                await fetchWithErrorHandling(`/motor/api/motors/${motorId}/`, getRequestOptions('DELETE'));
+                showToast('Motor deleted successfully!');
+                await fetchMotors();
+                navigateTo('motors-list');
+            } catch (error) {
+                console.error('Error deleting motor:', error);
+            }
+        }
+
+        async function toggleMotorStatus(motorId) {
+            try {
+                await fetchWithErrorHandling(`/motor/api/motors/${motorId}/toggle-status/`, getRequestOptions('POST'));
+                showToast('Motor status toggled successfully!');
+                await fetchMotors();
+
+                // If we're on the detail page, refresh it
+                if (document.getElementById('motor-detail').classList.contains('active')) {
+                    loadMotorDetail(motorId);
+                }
+            } catch (error) {
+                console.error('Error toggling motor status:', error);
+            }
+        }
+
+        async function addValve(motorId, valveNumber) {
+            try {
+                await fetchWithErrorHandling(`/motor/api/motors/${motorId}/add-valve/`,
+                    getRequestOptions('POST', { valve_number: valveNumber }));
+                showToast('Valve added successfully!');
+                await fetchMotors();
+
+                // Refresh current view if needed
+                if (document.getElementById('motor-detail').classList.contains('active')) {
+                    loadMotorDetail(motorId);
+                } else if (document.getElementById('valve-management').classList.contains('active')) {
+                    loadValveManagement(motorId);
+                }
+            } catch (error) {
+                console.error('Error adding valve:', error);
+            }
+        }
+
+        async function controlValve(motorId, valveNumber, action) {
+            try {
+                await fetchWithErrorHandling(`/motor/api/motors/${motorId}/control-valve/${valveNumber}/`,
+                    getRequestOptions('POST', { action }));
+                showToast(`Valve ${action === 'on' ? 'turned on' : 'turned off'} successfully!`);
+                await fetchMotors();
+
+                // Refresh current view if needed
+                if (document.getElementById('motor-detail').classList.contains('active')) {
+                    loadMotorDetail(motorId);
+                } else if (document.getElementById('valve-management').classList.contains('active')) {
+                    loadValveManagement(motorId);
+                }
+            } catch (error) {
+                console.error('Error controlling valve:', error);
+            }
+        }
+
+        // Rendering Functions
+        function renderMotorsTable() {
+            const tableBody = document.querySelector('#motors-table tbody');
+            tableBody.innerHTML = '';
+
+            if (motors.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" style="text-align: center;">No motors found. Create one to get started!</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            motors.forEach(motor => {
+                const statusClass = motor.STATUS === '1' ? 'status-working' : 'status-idle';
+                const statusText = motor.STATUS === '1' ? 'Working' : 'Idle';
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${motor.name}</td>
+                    <td>${motor.UIN}</td>
+                    <td>${motor.TYPE === 'REQ' ? 'Required' : 'Optional'}</td>
+                    <td>${motor.VCOUNT}</td>
+                    <td><span class="status-badge ${statusClass}">${statusText}</span></td>
+                    <td>
+                        <button onclick="navigateTo('motor-detail', {motorId: ${motor.id}})" class="btn-success">Details</button>
+                        <button onclick="deleteMotor(${motor.id})" class="btn-danger">Delete</button>
+                    </td>
+                `;
+
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateMotorSelect() {
+            const select = document.getElementById('motor-select');
+
+            // Clear existing options except the placeholder
+            while (select.options.length > 1) {
+                select.remove(1);
+            }
+
+            // Add motors to select
+            motors.forEach(motor => {
+                const option = document.createElement('option');
+                option.value = motor.id;
+                option.textContent = `${motor.name} (${motor.UIN})`;
+                select.appendChild(option);
+            });
+        }
+
+        function loadMotorDetail(motorId) {
+            const motor = motors.find(m => m.id === parseInt(motorId));
+
+            if (!motor) {
+                showToast('Motor not found', 'error');
+                navigateTo('motors-list');
+                return;
+            }
+
+            currentMotor = motor;
+            const detailContent = document.getElementById('motor-detail-content');
+
+            const statusClass = motor.STATUS === '1' ? 'status-working' : 'status-idle';
+            const statusText = motor.STATUS === '1' ? 'Working' : 'Idle';
+
+            detailContent.innerHTML = `
+                <div class="detail-header">
+                    <h2>${motor.name} <span class="status-badge ${statusClass}">${statusText}</span></h2>
+                    <p>UIN: ${motor.UIN}</p>
+                </div>
+
+                <div class="detail-info">
+                    <p><strong>Type:</strong> ${motor.TYPE === 'REQ' ? 'Required' : 'Optional'}</p>
+                    <p><strong>Valve Count:</strong> ${motor.VCOUNT}</p>
+                    <p><strong>Created:</strong> ${new Date(motor.created_at).toLocaleString()}</p>
+                    <p><strong>Last Updated:</strong> ${new Date(motor.updated_at).toLocaleString()}</p>
+                </div>
+
+                <div class="detail-actions">
+                    <button onclick="toggleMotorStatus(${motor.id})" class="btn-warning">
+                        ${motor.STATUS === '1' ? 'Set to Idle' : 'Set to Working'}
+                    </button>
+                    <button onclick="deleteMotor(${motor.id})" class="btn-danger">Delete Motor</button>
+                </div>
+
+                <h3>Valves</h3>
+                ${motor.valves.length === 0 ? '<p>No valves available for this motor.</p>' : ''}
+
+                <div class="valve-list">
+                    ${motor.valves.map(valve => `
+                        <div class="valve-item">
+                            <div>
+                                <strong>Valve ${valve.valve_number}</strong>
+                                <span class="status-badge ${valve.status_display.toLowerCase() === 'on' ? 'status-on' : 'status-off'}">
+                                    ${valve.status_display}
+                                </span>
+                            </div>
+                            <div class="valve-controls">
+                                <button onclick="controlValve(${motor.id}, ${valve.valve_number}, 'on')" class="btn-success">
+                                    Turn On
+                                </button>
+                                <button onclick="controlValve(${motor.id}, ${valve.valve_number}, 'off')" class="btn-danger">
+                                    Turn Off
+                                </button>
+                            </div>
                         </div>
-                    `;
-                    container.append(valveInput);
-                }
+                    `).join('')}
+                </div>
+
+                ${motor.VCOUNT < 10 ? `
+                    <div class="add-valve-form">
+                        <input type="number" id="new-valve-${motor.id}" min="1" max="10" placeholder="Valve Number" required>
+                        <button onclick="handleAddValve(${motor.id})">Add Valve</button>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        function loadValveManagement(motorId) {
+            const motor = motors.find(m => m.id === parseInt(motorId));
+
+            if (!motor) {
+                document.getElementById('valve-management-content').innerHTML = '<p>Please select a motor first.</p>';
+                return;
             }
 
-            function resetForm() {
-                // Reset form values
-                $('#motorId').val('');
-                $('#formTitle').text('Add New Motor');
-                $('#motorCreateForm')[0].reset();
+            currentMotor = motor;
+            const contentElement = document.getElementById('valve-management-content');
 
-                // Reset valve inputs
-                $('#valveInputsContainer').empty();
-                $('#valvesFormSection').hide();
+            contentElement.innerHTML = `
+                <div class="card">
+                    <div class="card-header">
+                        Valves for ${motor.name} (${motor.UIN})
+                    </div>
+                    <div class="card-body">
+                        <p><strong>Motor Type:</strong> ${motor.TYPE === 'REQ' ? 'Required' : 'Optional'}</p>
+                        <p><strong>Status:</strong>
+                            <span class="status-badge ${motor.STATUS === '1' ? 'status-working' : 'status-idle'}">
+                                ${motor.STATUS === '1' ? 'Working' : 'Idle'}
+                            </span>
+                        </p>
+
+                        <h3>Valve Controls</h3>
+                        ${motor.valves.length === 0 ? '<p>No valves available for this motor.</p>' : ''}
+
+                        <div class="valve-list">
+                            ${motor.valves.map(valve => `
+                                <div class="valve-item">
+                                    <div>
+                                        <strong>Valve ${valve.valve_number}</strong>
+                                        <span class="status-badge ${valve.status_display.toLowerCase() === 'on' ? 'status-on' : 'status-off'}">
+                                            ${valve.status_display}
+                                        </span>
+                                    </div>
+                                    <div class="valve-controls">
+                                        <button onclick="controlValve(${motor.id}, ${valve.valve_number}, 'on')" class="btn-success">
+                                            Turn On
+                                        </button>
+                                        <button onclick="controlValve(${motor.id}, ${valve.valve_number}, 'off')" class="btn-danger">
+                                            Turn Off
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+
+                        ${motor.VCOUNT < 10 ? `
+                            <div class="add-valve-form">
+                                <input type="number" id="valve-management-${motor.id}" min="1" max="10" placeholder="Valve Number" required>
+                                <button onclick="handleAddValveFromManagement(${motor.id})">Add Valve</button>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Event Handlers
+        function handleAddValve(motorId) {
+            const input = document.getElementById(`new-valve-${motorId}`);
+            const valveNumber = parseInt(input.value);
+
+            if (isNaN(valveNumber) || valveNumber < 1 || valveNumber > 10) {
+                showToast('Please enter a valid valve number (1-10)', 'error');
+                return;
             }
 
-            function showNotification(message, type) {
-                const notification = $('#notification');
-                notification.text(message);
-                notification.removeClass('success error').addClass(type);
-                notification.show();
+            addValve(motorId, valveNumber);
+            input.value = '';
+        }
 
-                // Hide notification after 5 seconds
-                setTimeout(function() {
-                    notification.hide();
-                }, 5000);
+        function handleAddValveFromManagement(motorId) {
+            const input = document.getElementById(`valve-management-${motorId}`);
+            const valveNumber = parseInt(input.value);
+
+            if (isNaN(valveNumber) || valveNumber < 1 || valveNumber > 10) {
+                showToast('Please enter a valid valve number (1-10)', 'error');
+                return;
             }
 
-            function showLoading(elementId, show) {
-                if (show) {
-                    $(`#${elementId}`).show();
-                } else {
-                    $(`#${elementId}`).hide();
-                }
-            }
+            addValve(motorId, valveNumber);
+            input.value = '';
+        }
 
-            function getErrorMessage(xhr) {
-                if (xhr.responseJSON && xhr.responseJSON.error) {
-                    return xhr.responseJSON.error;
-                } else if (xhr.responseJSON && xhr.responseJSON.detail) {
-                    return xhr.responseJSON.detail;
-                } else if (xhr.statusText) {
-                    return xhr.statusText;
-                } else {
-                    return 'An unknown error occurred';
-                }
+        // Motor select event handler
+        document.getElementById('motor-select').addEventListener('change', (e) => {
+            const motorId = e.target.value;
+            if (motorId) {
+                loadValveManagement(motorId);
+            } else {
+                document.getElementById('valve-management-content').innerHTML = '<p>Please select a motor first.</p>';
             }
         });
+
+        // Form submission handler
+        document.getElementById('create-motor-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            createMotor(new FormData(this));
+        });
+
+        // Initialize app
+        fetchMotors();
     </script>
 </body>
 </html>
