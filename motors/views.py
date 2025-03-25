@@ -1,139 +1,104 @@
-# views.py
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Motor, Valve
 from .serializers import MotorSerializer, ValveSerializer
+from django.shortcuts import get_object_or_404
 
 
-# Motor CRUD views
 class MotorListCreateView(generics.ListCreateAPIView):
-    queryset = Motor.objects.all()
     serializer_class = MotorSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """Return only motors owned by the current user"""
+        return Motor.objects.filter(owner=self.request.user)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        motor = serializer.save()
 
-        # Double-check that all valves are created
-        vcount = motor.VCOUNT
-        existing_valve_count = Valve.objects.filter(motor=motor).count()
+        # Set owner to current user
+        motor = serializer.save(owner=request.user)
 
-        # Create missing valves if any
-        if existing_valve_count < vcount:
-            existing_valve_numbers = set(Valve.objects.filter(motor=motor).values_list('valve_number', flat=True))
-            for i in range(1, vcount + 1):
-                if i not in existing_valve_numbers:
-                    Valve.objects.create(
-                        motor=motor,
-                        valve_number=i,
-                        value="0"  # Default value
-                    )
+        # Create valves (max 4)
+        vcount = min(motor.VCOUNT, 4)
+        existing_valve_numbers = set(motor.valves.values_list('valve_number', flat=True))
 
-        # Return the full motor data including all valves
-        result = self.get_serializer(motor)
+        for i in range(1, vcount + 1):
+            if i not in existing_valve_numbers:
+                Valve.objects.create(
+                    motor=motor,
+                    valve_number=i,
+                    value="0"
+                )
+
         headers = self.get_success_headers(serializer.data)
-        return Response(result.data, status=status.HTTP_201_CREATED, headers=headers)
+        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class MotorRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
-    queryset = Motor.objects.all()
     serializer_class = MotorSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """Return only motors owned by the current user"""
+        return Motor.objects.filter(owner=self.request.user)
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
         instance = self.get_object()
         old_vcount = instance.VCOUNT
 
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer = self.get_serializer(instance, data=request.data, partial=kwargs.pop('partial', False))
         serializer.is_valid(raise_exception=True)
         motor = serializer.save()
 
-        # Handle valve count changes
-        new_vcount = motor.VCOUNT
+        # Handle valve count changes (max 4)
+        new_vcount = min(motor.VCOUNT, 4)
+        existing_valve_numbers = set(motor.valves.values_list('valve_number', flat=True))
 
-        # Create any missing valves if VCOUNT was increased/changed
-        existing_valve_numbers = set(Valve.objects.filter(motor=motor).values_list('valve_number', flat=True))
+        # Create missing valves
         for i in range(1, new_vcount + 1):
             if i not in existing_valve_numbers:
                 Valve.objects.create(
                     motor=motor,
                     valve_number=i,
-                    value="0"  # Default value
+                    value="0"
                 )
 
         # Remove extra valves if VCOUNT was reduced
         if new_vcount < old_vcount:
-            Valve.objects.filter(motor=motor, valve_number__gt=new_vcount).delete()
+            motor.valves.filter(valve_number__gt=new_vcount).delete()
 
-        # Return the updated motor data
-        result = self.get_serializer(motor)
-        return Response(result.data)
+        return Response(serializer.data)
 
 
-# Valve related views
 class ValveListView(generics.ListAPIView):
     serializer_class = ValveSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         motor_id = self.kwargs.get('motor_id')
-        return Valve.objects.filter(motor_id=motor_id)
-
-
-class ValveAddView(APIView):
-    def post(self, request, motor_id):
-        try:
-            motor = Motor.objects.get(pk=motor_id)
-        except Motor.DoesNotExist:
-            return Response({"error": "Motor not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        valve_number = request.data.get('valve_number')
-        value = request.data.get('value', '0')
-
-        if not valve_number:
-            return Response({"error": "valve_number is required"}, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            valve_number = int(valve_number)
-        except ValueError:
-            return Response({"error": "valve_number must be an integer"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Check if valve already exists
-        if Valve.objects.filter(motor=motor, valve_number=valve_number).exists():
-            return Response({"error": f"Valve {valve_number} already exists for this motor"},
-                            status=status.HTTP_400_BAD_REQUEST)
-
-        # Create new valve
-        valve = Valve.objects.create(motor=motor, valve_number=valve_number, value=value)
-
-        # Update VCOUNT if needed
-        current_valve_count = Valve.objects.filter(motor=motor).count()
-        if current_valve_count > motor.VCOUNT:
-            motor.VCOUNT = current_valve_count
-            motor.save()
-
-        serializer = ValveSerializer(valve)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        motor = get_object_or_404(Motor, pk=motor_id, owner=self.request.user)
+        return motor.valves.all()
 
 
 class ValveControlView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def post(self, request, motor_id, valve_number):
         """Control (turn on/off) a specific valve of a motor"""
-        try:
-            motor = Motor.objects.get(pk=motor_id)
-        except Motor.DoesNotExist:
-            return Response({"error": "Motor not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        action_type = request.data.get('action', '').lower()
+        motor = get_object_or_404(Motor, pk=motor_id, owner=self.request.user)
 
         try:
-            valve = Valve.objects.get(motor=motor, valve_number=valve_number)
+            valve = motor.valves.get(valve_number=valve_number)
         except Valve.DoesNotExist:
             return Response(
                 {"error": f"Valve {valve_number} does not exist for motor {motor.name}"},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+        action_type = request.data.get('action', '').lower()
 
         if action_type == 'on':
             valve.turn_on()
@@ -149,69 +114,58 @@ class ValveControlView(APIView):
 
 
 class ValveStatusView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def get(self, request, motor_id):
         """Get the status of all valves for a motor"""
-        try:
-            motor = Motor.objects.get(pk=motor_id)
-        except Motor.DoesNotExist:
-            return Response({"error": "Motor not found"}, status=status.HTTP_404_NOT_FOUND)
-
-        valves = Valve.objects.filter(motor=motor)
+        motor = get_object_or_404(Motor, pk=motor_id, owner=self.request.user)
+        valves = motor.valves.all()
 
         status_data = {
             "motor_name": motor.name,
             "UIN": motor.UIN,
-            "valve_count": motor.VCOUNT,
-            "valves": {}
-        }
-
-        for valve in valves:
-            status_data["valves"][f"V{valve.valve_number}"] = {
-                "status": "On" if valve.value == "1" else "Off",
-                "value": valve.value,
-                "last_operated": valve.last_operated_at
+            "valve_count": min(motor.VCOUNT, 4),
+            "valves": {
+                f"V{valve.valve_number}": {
+                    "status": "On" if valve.value == "1" else "Off",
+                    "value": valve.value,
+                    "last_operated": valve.last_operated_at
+                } for valve in valves
             }
+        }
 
         return Response(status_data)
 
 
 class MotorStatusToggleView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def post(self, request, motor_id):
         """Toggle the status of a motor between Working (1) and Idle (0)"""
-        try:
-            motor = Motor.objects.get(pk=motor_id)
-        except Motor.DoesNotExist:
-            return Response({"error": "Motor not found"}, status=status.HTTP_404_NOT_FOUND)
+        motor = get_object_or_404(Motor, pk=motor_id, owner=self.request.user)
 
-        # Toggle status
-        if motor.STATUS == "1":
-            motor.STATUS = "0"  # Set to Idle
-            status_message = "Idle"
-        else:
-            motor.STATUS = "1"  # Set to Working
-            status_message = "Working"
-
+        motor.STATUS = "0" if motor.STATUS == "1" else "1"
         motor.save()
+
+        status_display = "Working" if motor.STATUS == "1" else "Idle"
 
         return Response({
             "status": "success",
-            "message": f"Motor {motor.name} status changed to {status_message}",
+            "message": f"Motor {motor.name} status changed to {status_display}",
             "motor_status": motor.STATUS,
-            "status_display": "Working" if motor.STATUS == "1" else "Idle",
+            "status_display": status_display,
             "status_color": motor.status_color
         })
 
 
 class MotorStatusSetView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
     def post(self, request, motor_id):
         """Set the status of a motor to Working (1) or Idle (0)"""
-        try:
-            motor = Motor.objects.get(pk=motor_id)
-        except Motor.DoesNotExist:
-            return Response({"error": "Motor not found"}, status=status.HTTP_404_NOT_FOUND)
+        motor = get_object_or_404(Motor, pk=motor_id, owner=self.request.user)
 
         status_value = request.data.get('status')
-
         if status_value not in ["0", "1"]:
             return Response(
                 {"error": "Invalid status. Use '0' for Idle or '1' for Working"},
