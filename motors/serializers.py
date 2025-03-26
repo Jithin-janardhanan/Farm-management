@@ -1,4 +1,3 @@
-# serializers.py
 from rest_framework import serializers
 from .models import Motor, Valve
 
@@ -16,29 +15,45 @@ class ValveSerializer(serializers.ModelSerializer):
 
 class MotorSerializer(serializers.ModelSerializer):
     valves = ValveSerializer(many=True, read_only=True)
-    # These fields are optional for creating specific valve values
+    status_display = serializers.SerializerMethodField()
+    status_color = serializers.SerializerMethodField()
+    owner = serializers.PrimaryKeyRelatedField(
+        read_only=True,
+        default=serializers.CurrentUserDefault()
+    )
+
+    # Only keeping V1-V4 since we only need 4 valves
     V1 = serializers.CharField(write_only=True, required=False, default="0")
     V2 = serializers.CharField(write_only=True, required=False, default="0")
     V3 = serializers.CharField(write_only=True, required=False, default="0")
     V4 = serializers.CharField(write_only=True, required=False, default="0")
-    V5 = serializers.CharField(write_only=True, required=False, default="0")
-    V6 = serializers.CharField(write_only=True, required=False, default="0")
-    V7 = serializers.CharField(write_only=True, required=False, default="0")
-    V8 = serializers.CharField(write_only=True, required=False, default="0")
-    V9 = serializers.CharField(write_only=True, required=False, default="0")
-    V10 = serializers.CharField(write_only=True, required=False, default="0")
 
     class Meta:
         model = Motor
-        fields = ['id', 'name', 'UIN', 'TYPE', 'VCOUNT', 'STATUS',
-                  'V1', 'V2', 'V3', 'V4', 'V5', 'V6', 'V7', 'V8', 'V9', 'V10',
+        fields = ['id', 'owner', 'name', 'UIN', 'TYPE', 'VCOUNT', 'STATUS',
+                  'status_display', 'status_color', 'V1', 'V2', 'V3', 'V4',
                   'valves', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
+    def get_status_display(self, obj):
+        return "Working" if obj.STATUS == "1" else "Idle"
+
+    def get_status_color(self, obj):
+        return obj.status_color
+
+    def validate_VCOUNT(self, value):
+        """Ensure VCOUNT doesn't exceed 4"""
+        if value > 4:
+            raise serializers.ValidationError("Maximum 4 valves allowed")
+        return value
+
     def create(self, validated_data):
-        # Extract valve data
+        # Set the owner to the current user
+        validated_data['owner'] = self.context['request'].user
+
+        # Extract valve data (only V1-V4)
         valve_data = {}
-        for i in range(1, 11):
+        for i in range(1, 5):
             key = f'V{i}'
             if key in validated_data:
                 valve_data[i] = validated_data.pop(key)
@@ -46,11 +61,11 @@ class MotorSerializer(serializers.ModelSerializer):
         # Create the motor
         motor = Motor.objects.create(**validated_data)
 
-        # Create valves based on VCOUNT - ensure all valves up to VCOUNT are created
-        vcount = int(validated_data.get('VCOUNT', 0))
+        # Create valves based on VCOUNT (max 4)
+        vcount = min(int(validated_data.get('VCOUNT', 0)), 4)
 
         for i in range(1, vcount + 1):
-            value = valve_data.get(i, "0")  # Default to "0" if not specified
+            value = valve_data.get(i, "0")
             Valve.objects.create(
                 motor=motor,
                 valve_number=i,
@@ -60,9 +75,9 @@ class MotorSerializer(serializers.ModelSerializer):
         return motor
 
     def update(self, instance, validated_data):
-        # Extract valve data
+        # Extract valve data (only V1-V4)
         valve_data = {}
-        for i in range(1, 11):
+        for i in range(1, 5):
             key = f'V{i}'
             if key in validated_data:
                 valve_data[i] = validated_data.pop(key)
@@ -73,8 +88,8 @@ class MotorSerializer(serializers.ModelSerializer):
             setattr(instance, attr, value)
         instance.save()
 
-        # Get the new VCOUNT
-        new_vcount = instance.VCOUNT
+        # Get the new VCOUNT (capped at 4)
+        new_vcount = min(int(instance.VCOUNT), 4)
 
         # Update existing valves or create new ones
         for i in range(1, new_vcount + 1):
@@ -89,7 +104,7 @@ class MotorSerializer(serializers.ModelSerializer):
         existing_valve_numbers = set(Valve.objects.filter(motor=instance).values_list('valve_number', flat=True))
         for i in range(1, new_vcount + 1):
             if i not in existing_valve_numbers:
-                value = valve_data.get(i, "0")  # Default to "0" if not specified
+                value = valve_data.get(i, "0")
                 Valve.objects.create(
                     motor=instance,
                     valve_number=i,

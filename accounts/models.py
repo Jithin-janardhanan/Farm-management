@@ -1,10 +1,5 @@
 from django.db import models
-
-# Create your models here.
-from django.db import models
 from django.contrib.auth.models import AbstractUser
-
-
 
 class User(AbstractUser):
     ROLE_CHOICES = (
@@ -21,3 +16,10 @@ class User(AbstractUser):
     def __str__(self):
         return self.email
 
+    @property
+    def is_admin(self):
+        return self.role == 'admin'
+
+    @property
+    def is_user(self):
+        return self.role == 'user'

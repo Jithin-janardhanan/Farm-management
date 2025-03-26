@@ -1,295 +1,175 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motor Valve Management System</title>
-    <!-- Bootstrap CSS -->
+    <title>Motor Management System</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         body {
+            padding-top: 20px;
             background-color: #f8f9fa;
         }
-        .container {
-            max-width: 1200px;
+        .header {
+            margin-bottom: 30px;
         }
         .card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
             margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        .tab {
-            cursor: pointer;
-            padding: 10px 15px;
-            border-radius: 4px 4px 0 0;
+        .btn-action {
             margin-right: 5px;
         }
-        .tab.active {
-            background-color: #0d6efd;
-            color: white;
-            font-weight: bold;
-        }
-        .tab-content {
-            display: none;
-            padding: 20px;
-            background-color: white;
-            border-radius: 0 4px 4px 4px;
-            border: 1px solid #dee2e6;
-        }
-        .tab-content.active {
-            display: block;
-        }
-        .action-buttons {
-            display: flex;
-            gap: 5px;
-        }
-        .loading {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-        }
-        #notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px;
-            border-radius: 4px;
-            color: white;
-            display: none;
-            z-index: 1000;
-        }
-        #notification.success {
-            background-color: #28a745;
-        }
-        #notification.error {
-            background-color: #dc3545;
-        }
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-        }
-        .modal-content {
-            background-color: white;
-            margin: 10% auto;
-            padding: 20px;
+        .valve-control {
+            padding: 10px;
             border-radius: 5px;
-            width: 80%;
-            max-width: 600px;
-        }
-        .close {
-            color: #aaa;
-            float: right;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .close:hover {
-            color: black;
-        }
-        .valve-button {
-            display: inline-block;
-            margin: 5px;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            text-align: center;
-            font-weight: bold;
+            margin: 5px 0;
+            background-color: #f8f9fa;
         }
         .valve-on {
-            background-color: #28a745;
-            color: white;
+            background-color: rgba(40, 167, 69, 0.2);
         }
         .valve-off {
-            background-color: #dc3545;
-            color: white;
+            background-color: rgba(108, 117, 125, 0.2);
         }
-        #valveControlContainer {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        .valve-input {
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-        }
-        .valve-input label {
-            width: 50px;
-            margin-right: 10px;
-        }
-        #valveInputsContainer {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 10px;
-        }
-        .status-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+        .status-working {
+            color: green;
             font-weight: bold;
         }
-        .status-Working {
-            background-color: #d4edda;
-            color: #155724;
+        .status-idle {
+            color: gray;
+            font-weight: bold;
         }
-        .status-Maintenance {
-            background-color: #fff3cd;
-            color: #856404;
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 5px solid #3498db;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
         }
-        .status-Failed {
-            background-color: #f8d7da;
-            color: #721c24;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-        .status-Idle {
-            background-color: #d1ecf1;
-            color: #0c5460;
-        }
-        .form-section {
-            margin-bottom: 20px;
+        .hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <div class="container mt-4">
-        <h1 class="mb-4 text-center">Motor Valve Management System</h1>
-
-        <!-- Tabs -->
-        <div class="d-flex mb-3">
-            <div class="tab active" data-tab="motors">Motors List</div>
-            <div class="tab" data-tab="motorForm">Add New Motor</div>
+    <div class="container">
+        <div class="header text-center">
+            <h1>Motor Management System</h1>
+            <p>Monitor and control your motors and valves</p>
         </div>
 
-        <!-- Notification -->
-        <div id="notification"></div>
-
-        <!-- Motors Tab -->
-        <div id="motors" class="tab-content active">
-            <h2>Motors</h2>
-            <div class="mb-3">
-                <button id="refreshMotors" class="btn btn-primary">
-                    <i class="bi bi-arrow-clockwise"></i> Refresh
-                </button>
-            </div>
-
-            <div class="table-responsive">
-                <table class="table table-striped table-hover">
-                    <thead class="table-dark">
-                        <tr>
-                            <th>Name</th>
-                            <th>UIN</th>
-                            <th>Type</th>
-                            <th>Valve Count</th>
-                            <th>Status</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="motorsTableBody">
-                        <!-- Motors will be loaded here -->
-                    </tbody>
-                </table>
-            </div>
-
-            <div id="motorsLoading" class="loading">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p>Loading motors...</p>
-            </div>
-        </div>
-
-        <!-- Motor Form Tab -->
-        <div id="motorForm" class="tab-content">
-            <h2 id="formTitle">Add New Motor</h2>
-
-            <form id="motorCreateForm">
-                <input type="hidden" id="motorId" value="">
-
-                <div class="form-section">
-                    <h4>Basic Information</h4>
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="name" class="form-label">Name</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="UIN" class="form-label">UIN</label>
-                            <input type="text" class="form-control" id="UIN" name="UIN" required>
-                        </div>
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Motors</h5>
+                        <button id="addMotorBtn" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus"></i> Add Motor
+                        </button>
                     </div>
-
-                    <div class="row">
-                        <div class="col-md-3 mb-3">
-                            <label for="TYPE" class="form-label">Type</label>
-                            <select class="form-select" id="TYPE" name="TYPE">
-                                <option value="REQ">Required</option>
-                                <option value="OPT">Optional</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label for="VCOUNT" class="form-label">Valve Count</label>
-                            <input type="number" class="form-control" id="VCOUNT" name="VCOUNT" min="0" max="10" value="1" required>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <label for="STATUS" class="form-label">Status</label>
-                            <select class="form-select" id="STATUS" name="STATUS">
-                                <option value="Working">Working</option>
-                                <option value="Maintenance">Under Maintenance</option>
-                                <option value="Failed">Failed</option>
-                                <option value="Idle">Idle</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-section" id="valvesFormSection">
-                    <h4>Valve Settings</h4>
-                    <div id="valveInputsContainer">
-                        <!-- Valve inputs will be generated here -->
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-end mt-4">
-                    <button type="button" id="cancelBtn" class="btn btn-secondary me-2">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Save Motor</button>
-                </div>
-            </form>
-        </div>
-
-        <!-- Motor Details Modal -->
-        <div id="motorDetailsModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h2>Motor Details</h2>
-
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h4>Basic Information</h4>
-                        <div class="mb-2"><strong>Name:</strong> <span id="detailName"></span></div>
-                        <div class="mb-2"><strong>UIN:</strong> <span id="detailUIN"></span></div>
-                        <div class="mb-2"><strong>Type:</strong> <span id="detailType"></span></div>
-                        <div class="mb-2"><strong>Status:</strong> <span id="detailStatus"></span></div>
-                        <div class="mb-2"><strong>Created:</strong> <span id="detailCreated"></span></div>
-                        <div class="mb-2"><strong>Last Updated:</strong> <span id="detailUpdated"></span></div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <h4>Valve Controls</h4>
-                        <div id="valveControlContainer">
-                            <!-- Valve controls will be loaded here -->
-                        </div>
-                        <div id="valvesLoading" class="loading">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                    <div class="card-body">
+                        <div id="motors-loader" class="loader"></div>
+                        <div id="motors-container" class="hidden">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>UIN</th>
+                                            <th>Type</th>
+                                            <th>Valve Count</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="motors-table-body">
+                                        <!-- Motors will be listed here dynamically -->
+                                    </tbody>
+                                </table>
                             </div>
-                            <p>Loading valves...</p>
+                        </div>
+                        <div id="no-motors" class="text-center hidden">
+                            <p>No motors found. Click "Add Motor" to create one.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="motor-details-container" class="row hidden">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 id="motor-details-title">Motor Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6>Information</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="table">
+                                            <tr>
+                                                <th>Name:</th>
+                                                <td id="detail-name"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>UIN:</th>
+                                                <td id="detail-uin"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Type:</th>
+                                                <td id="detail-type"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Status:</th>
+                                                <td id="detail-status"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Created:</th>
+                                                <td id="detail-created"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Updated:</th>
+                                                <td id="detail-updated"></td>
+                                            </tr>
+                                        </table>
+                                        <div class="d-flex mt-3">
+                                            <button id="toggle-status-btn" class="btn btn-primary btn-sm me-2">
+                                                Toggle Status
+                                            </button>
+                                            <button id="edit-motor-btn" class="btn btn-warning btn-sm me-2">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </button>
+                                            <button id="delete-motor-btn" class="btn btn-danger btn-sm">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h6>Valves Control</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div id="valves-container">
+                                            <!-- Valves will be displayed here dynamically -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -297,450 +177,600 @@
         </div>
     </div>
 
-    <!-- jQuery and Bootstrap JS -->
+    <!-- Motor Form Modal -->
+    <div class="modal fade" id="motorFormModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="motorFormTitle">Add New Motor</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="motorForm">
+                        <input type="hidden" id="motor-id">
+                        <div class="mb-3">
+                            <label for="motor-name" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="motor-name" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="motor-uin" class="form-label">UIN</label>
+                            <input type="text" class="form-control" id="motor-uin" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="motor-type" class="form-label">Type</label>
+                            <select class="form-select" id="motor-type" required>
+                                <option value="REQ">Required</option>
+                                <option value="OPT">Optional</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="motor-vcount" class="form-label">Valve Count (Max 4)</label>
+                            <input type="number" class="form-control" id="motor-vcount" min="0" max="4" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="motor-status" class="form-label">Status</label>
+                            <select class="form-select" id="motor-status" required>
+                                <option value="1">Working</option>
+                                <option value="0">Idle</option>
+                            </select>
+                        </div>
+                        <div id="valves-form-container" class="hidden">
+                            <h6 class="mb-3">Valve Initial Settings</h6>
+                            <div id="valves-form-inputs">
+                                <!-- Valve inputs will be added here dynamically -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="saveMotorBtn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div class="modal fade" id="confirmationModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirm Action</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="confirmation-message">
+                    Are you sure you want to proceed with this action?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmActionBtn">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal -->
+    <div class="modal fade" id="alertModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="alert-title">Notification</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="alert-message">
+                    <!-- Alert message will be set dynamically -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 
-    <!-- Main JavaScript -->
     <script>
-        $(document).ready(function() {
-            // API endpoints
-            const API_URL = '/motor/motors/'; // Update with your actual API base URL
+        // Global variables
+        const API_BASE_URL = '/motor/api/';
+        let currentMotorId = null;
+        let motors = [];
+        let motorDetailsVisible = false;
 
-            // Function to get CSRF token from cookies
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
+        // Modal instances
+        let motorFormModal;
+        let confirmationModal;
+        let alertModal;
+
+        // CSRF token management for AJAX requests
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
                     }
                 }
-                return cookieValue;
             }
+            return cookieValue;
+        }
 
-            const csrftoken = getCookie('csrftoken');
-
-            // Set up AJAX headers to include CSRF token
-            $.ajaxSetup({
-                beforeSend: function(xhr, settings) {
-                    if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
-                        // Only send the token to relative URLs.
-                        xhr.setRequestHeader("X-CSRFToken", csrftoken);
-                    }
+        // AJAX setup for CSRF token
+        $.ajaxSetup({
+            beforeSend: function(xhr, settings) {
+                if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
                 }
-            });
+            }
+        });
 
-            // Tab functionality
-            $('.tab').on('click', function() {
-                const tabId = $(this).data('tab');
-                $('.tab').removeClass('active');
-                $(this).addClass('active');
-                $('.tab-content').removeClass('active');
-                $('#' + tabId).addClass('active');
+        // Initialize the page
+        $(document).ready(function() {
+            // Initialize Bootstrap modals
+            motorFormModal = new bootstrap.Modal(document.getElementById('motorFormModal'));
+            confirmationModal = new bootstrap.Modal(document.getElementById('confirmationModal'));
+            alertModal = new bootstrap.Modal(document.getElementById('alertModal'));
 
-                if (tabId === 'motorForm') {
-                    resetForm();
-                }
-            });
-
-            // Load all motors when page loads
+            // Load motors when page loads
             loadMotors();
 
-            // Listen for changes on VCOUNT to update valve inputs
-            $('#VCOUNT').on('change', function() {
-                updateValveInputs();
+            // Event listeners for add/edit motor
+            $('#addMotorBtn').click(function() {
+                openMotorForm(null);
             });
 
-            // Form submission handler
-            $('#motorCreateForm').on('submit', function(e) {
-                e.preventDefault();
+            $('#saveMotorBtn').click(saveMotor);
 
-                const motorId = $('#motorId').val();
-                const motorData = {
-                    name: $('#name').val(),
-                    UIN: $('#UIN').val(),
-                    TYPE: $('#TYPE').val(),
-                    VCOUNT: parseInt($('#VCOUNT').val()),
-                    STATUS: $('#STATUS').val(),
-                    valves: [] // Initialize valves array
-                };
+            // Event listener for valve count changes
+            $('#motor-vcount').on('change', updateValveFormInputs);
 
-                // Add valve values to the valves array
-                const vcount = parseInt($('#VCOUNT').val());
-                for (let i = 1; i <= vcount; i++) {
-                    motorData.valves.push({
-                        valve_number: i,
-                        value: $(`#V${i}`).val()
-                    });
-                }
-
-                console.log('Sending motorData:', motorData); // Log the data being sent
-
-                if (motorId) {
-                    // Update existing motor
-                    updateMotor(motorId, motorData);
-                } else {
-                    // Create new motor
-                    createMotor(motorData);
+            // Motor detail actions
+            $('#toggle-status-btn').click(toggleMotorStatus);
+            $('#edit-motor-btn').click(function() {
+                if (currentMotorId) {
+                    const motor = motors.find(m => m.id === currentMotorId);
+                    openMotorForm(motor);
                 }
             });
 
-            // Refresh button
-            $('#refreshMotors').on('click', function() {
-                loadMotors();
-            });
-
-            // Cancel button handler
-            $('#cancelBtn').on('click', function() {
-                resetForm();
-                // Switch back to motors tab
-                $('.tab[data-tab="motors"]').click();
-            });
-
-            // Close modal when clicking the X or outside the modal
-            $('.close, .modal').on('click', function(e) {
-                if (e.target === this) {
-                    $('.modal').hide();
+            $('#delete-motor-btn').click(function() {
+                if (currentMotorId) {
+                    showConfirmation(
+                        `Are you sure you want to delete this motor?`,
+                        deleteMotor
+                    );
                 }
             });
+        });
 
-            // Functions for CRUD operations
-            function loadMotors() {
-                showLoading('motorsLoading', true);
+        // Load all motors
+        function loadMotors() {
+            $('#motors-loader').removeClass('hidden');
+            $('#motors-container').addClass('hidden');
+            $('#no-motors').addClass('hidden');
 
-                $.ajax({
-                    url: API_URL,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function(data) {
-                        displayMotors(data);
-                        showLoading('motorsLoading', false);
-                    },
-                    error: function(xhr, status, error) {
-                        showNotification('Error loading motors: ' + getErrorMessage(xhr), 'error');
-                        showLoading('motorsLoading', false);
+            $.ajax({
+                url: API_BASE_URL + 'motors/',
+                type: 'GET',
+                success: function(data) {
+                    motors = data;
+                    renderMotorsTable(data);
+                    $('#motors-loader').addClass('hidden');
+
+                    if (data.length > 0) {
+                        $('#motors-container').removeClass('hidden');
+                    } else {
+                        $('#no-motors').removeClass('hidden');
                     }
-                });
+
+                    // If we were showing motor details, reload them
+                    if (motorDetailsVisible && currentMotorId) {
+                        loadMotorDetails(currentMotorId);
+                    }
+                },
+                error: function(xhr) {
+                    $('#motors-loader').addClass('hidden');
+                    $('#no-motors').removeClass('hidden').html(
+                        '<div class="alert alert-danger">Error loading motors. Please try again later.</div>'
+                    );
+                    console.error('Error loading motors:', xhr.responseText);
+                }
+            });
+        }
+
+        // Render motors table
+        function renderMotorsTable(motors) {
+            const tableBody = $('#motors-table-body');
+            tableBody.empty();
+
+            if (motors.length === 0) {
+                return;
             }
 
-            function displayMotors(motors) {
-                const tbody = $('#motorsTableBody');
-                tbody.empty();
+            motors.forEach(motor => {
+                const statusClass = motor.STATUS === '1' ? 'status-working' : 'status-idle';
+                const row = `
+                    <tr>
+                        <td>${motor.name}</td>
+                        <td>${motor.UIN}</td>
+                        <td>${motor.TYPE === 'REQ' ? 'Required' : 'Optional'}</td>
+                        <td>${motor.VCOUNT}</td>
+                        <td class="${statusClass}">${motor.status_display}</td>
+                        <td>
+                            <button class="btn btn-info btn-sm btn-action view-motor" data-id="${motor.id}">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button class="btn btn-warning btn-sm btn-action edit-motor" data-id="${motor.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger btn-sm btn-action delete-motor" data-id="${motor.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+                tableBody.append(row);
+            });
 
-                if (motors.length === 0) {
-                    tbody.append('<tr><td colspan="7" class="text-center">No motors found</td></tr>');
-                    return;
-                }
+            // Add event listeners to the buttons
+            $('.view-motor').click(function() {
+                const motorId = parseInt($(this).data('id'));
+                loadMotorDetails(motorId);
+            });
 
-                motors.forEach(function(motor) {
-                    const typeDisplay = motor.TYPE === 'REQ' ? 'Required' : 'Optional';
-                    const statusClass = `status-${motor.STATUS}`;
+            $('.edit-motor').click(function() {
+                const motorId = parseInt($(this).data('id'));
+                const motor = motors.find(m => m.id === motorId);
+                openMotorForm(motor);
+            });
 
-                    const row = `
-                        <tr>
-                            <td>${motor.name}</td>
-                            <td>${motor.UIN}</td>
-                            <td>${typeDisplay}</td>
-                            <td>${motor.VCOUNT}</td>
-                            <td><span class="status-badge ${statusClass}">${motor.STATUS}</span></td>
-
-                            <td>
-                                <div class="action-buttons">
-                                    <button class="btn btn-info btn-sm view-motor" data-id="${motor.id}">View</button>
-                                    <button class="btn btn-warning btn-sm edit-motor" data-id="${motor.id}">Edit</button>
-                                    <button class="btn btn-danger btn-sm delete-motor" data-id="${motor.id}">Delete</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                    tbody.append(row);
-                });
-
-                // Attach event handlers to buttons
-                $('.view-motor').on('click', function() {
-                    const motorId = $(this).data('id');
-                    showMotorDetails(motorId);
-                });
-
-                $('.edit-motor').on('click', function() {
-                    const motorId = $(this).data('id');
-                    editMotor(motorId);
-                });
-
-                $('.delete-motor').on('click', function() {
-                    const motorId = $(this).data('id');
-                    if (confirm('Are you sure you want to delete this motor?')) {
+            $('.delete-motor').click(function() {
+                const motorId = parseInt($(this).data('id'));
+                const motor = motors.find(m => m.id === motorId);
+                showConfirmation(
+                    `Are you sure you want to delete the motor "${motor.name}"?`,
+                    function() {
                         deleteMotor(motorId);
                     }
-                });
+                );
+            });
+        }
+
+        // Load motor details
+        function loadMotorDetails(motorId) {
+            currentMotorId = motorId;
+            const motor = motors.find(m => m.id === motorId);
+
+            // Update motor info in details panel
+            $('#detail-name').text(motor.name);
+            $('#detail-uin').text(motor.UIN);
+            $('#detail-type').text(motor.TYPE === 'REQ' ? 'Required' : 'Optional');
+            $('#detail-created').text(formatDate(motor.created_at));
+            $('#detail-updated').text(formatDate(motor.updated_at));
+
+            // Update status with color
+            if (motor.STATUS === '1') {
+                $('#detail-status').html('<span class="status-working">Working</span>');
+            } else {
+                $('#detail-status').html('<span class="status-idle">Idle</span>');
             }
 
-            function showMotorDetails(motorId) {
-                $.ajax({
-                    url: `${API_URL}${motorId}/`,
-                    type: 'GET',
-                    success: function(motor) {
-                        // Fill in the motor details
-                        $('#detailName').text(motor.name);
-                        $('#detailUIN').text(motor.UIN);
-                        $('#detailType').text(motor.TYPE === 'REQ' ? 'Required' : 'Optional');
-                        $('#detailStatus').text(motor.STATUS);
-                        $('#detailCreated').text(new Date(motor.created_at).toLocaleString());
-                        $('#detailUpdated').text(new Date(motor.updated_at).toLocaleString());
+            // Update title
+            $('#motor-details-title').text(`Motor Details: ${motor.name} (${motor.UIN})`);
 
-                        // Show the modal
-                        $('#motorDetailsModal').show();
+            // Show details container
+            $('#motor-details-container').removeClass('hidden');
+            motorDetailsVisible = true;
 
-                        // Load valve controls
-                        loadValveControls(motorId);
-                    },
-                    error: function(xhr) {
-                        showNotification('Error loading motor details: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
+            // Load valves
+            loadValves(motorId);
+        }
 
-            function loadValveControls(motorId) {
-                showLoading('valvesLoading', true);
-
-                $.ajax({
-                    url: `${API_URL}${motorId}/valve-status/`,
-                    type: 'GET',
-                    success: function(data) {
-                        const container = $('#valveControlContainer');
-                        container.empty();
-
-                        if (!data.valves || Object.keys(data.valves).length === 0) {
-                            container.html('<p>No valves available for this motor</p>');
-                            showLoading('valvesLoading', false);
-                            return;
-                        }
-
-                        // Create valve buttons
-                        Object.keys(data.valves).sort().forEach(function(key) {
-                            const valve = data.valves[key];
-                            const valveNumber = key.replace('V', '');
-                            const isOn = valve.status === 'On';
-
-                            const buttonClass = isOn ? 'valve-button valve-on' : 'valve-button valve-off';
-                            const button = `
-                                <div class="${buttonClass}" data-motor="${motorId}" data-valve="${valveNumber}" data-status="${isOn ? 'on' : 'off'}">
-                                    ${key}: ${valve.status}
-                                </div>
-                            `;
-                            container.append(button);
-                        });
-
-                        // Attach click handlers to valve buttons
-                        $('.valve-button').on('click', function() {
-                            const motorId = $(this).data('motor');
-                            const valveNumber = $(this).data('valve');
-                            const currentStatus = $(this).data('status');
-                            const newAction = currentStatus === 'on' ? 'off' : 'on';
-
-                            controlValve(motorId, valveNumber, newAction, $(this));
-                        });
-
-                        showLoading('valvesLoading', false);
-                    },
-                    error: function(xhr) {
-                        $('#valveControlContainer').html('<p>Error loading valve data</p>');
-                        showLoading('valvesLoading', false);
-                        showNotification('Error loading valve controls: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
-
-            function controlValve(motorId, valveNumber, action, buttonElement) {
-                $.ajax({
-                    url: `${API_URL}${motorId}/control-valve/${valveNumber}/`,
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify({ action: action }),
-                    success: function(response) {
-                        // Update button appearance
-                        if (action === 'on') {
-                            buttonElement.removeClass('valve-off').addClass('valve-on');
-                            buttonElement.data('status', 'on');
-                            buttonElement.html(`V${valveNumber}: On`);
-                        } else {
-                            buttonElement.removeClass('valve-on').addClass('valve-off');
-                            buttonElement.data('status', 'off');
-                            buttonElement.html(`V${valveNumber}: Off`);
-                        }
-
-                        showNotification(response.message, 'success');
-                    },
-                    error: function(xhr) {
-                        showNotification('Error controlling valve: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
-
-            function createMotor(motorData) {
-                $.ajax({
-                    url: API_URL,
-                    type: 'POST',
-                    contentType: 'application/json',
-                    data: JSON.stringify(motorData),
-                    success: function(response) {
-                        showNotification('Motor created successfully!', 'success');
-                        resetForm();
-                        loadMotors();
-                        $('.tab[data-tab="motors"]').click(); // Switch to motors tab
-                    },
-                    error: function(xhr) {
-                        showNotification('Error creating motor: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
-
-            function editMotor(motorId) {
-                // Switch to motor form tab
-                $('.tab[data-tab="motorForm"]').click();
-
-                // Update form title
-                $('#formTitle').text('Edit Motor');
-
-                // Set motor ID for form submission
-                $('#motorId').val(motorId);
-
-                // Fetch motor data
-                $.ajax({
-                    url: `${API_URL}${motorId}/`,
-                    type: 'GET',
-                    success: function(motor) {
-                        // Fill form with motor data
-                        $('#name').val(motor.name);
-                        $('#UIN').val(motor.UIN);
-                        $('#TYPE').val(motor.TYPE);
-                        $('#VCOUNT').val(motor.VCOUNT);
-                        $('#STATUS').val(motor.STATUS);
-
-                        // Update valve inputs
-                        updateValveInputs();
-
-                        // Fill in valve values if available
-                        setTimeout(function() {
-                            if (motor.valves && motor.valves.length > 0) {
-                                motor.valves.forEach(function(valve) {
-                                    $(`#V${valve.valve_number}`).val(valve.value);
-                                });
-                            }
-                        }, 100);
-                    },
-                    error: function(xhr) {
-                        showNotification('Error loading motor data: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
-
-            function updateMotor(motorId, motorData) {
-                $.ajax({
-                    url: `${API_URL}${motorId}/`,
-                    type: 'PUT',
-                    contentType: 'application/json',
-                    data: JSON.stringify(motorData),
-                    success: function(response) {
-                        showNotification('Motor updated successfully!', 'success');
-                        resetForm();
-                        loadMotors();
-                        $('.tab[data-tab="motors"]').click(); // Switch to motors tab
-                    },
-                    error: function(xhr) {
-                        showNotification('Error updating motor: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
-
-            function deleteMotor(motorId) {
-                $.ajax({
-                    url: `${API_URL}${motorId}/`,
-                    type: 'DELETE',
-                    success: function() {
-                        showNotification('Motor deleted successfully!', 'success');
-                        loadMotors();
-                    },
-                    error: function(xhr) {
-                        showNotification('Error deleting motor: ' + getErrorMessage(xhr), 'error');
-                    }
-                });
-            }
-
-            function updateValveInputs() {
-                const vcount = parseInt($('#VCOUNT').val()) || 0;
-                const container = $('#valveInputsContainer');
-                container.empty();
-
-                if (vcount === 0) {
-                    $('#valvesFormSection').hide();
-                    return;
+        // Load valves for a motor
+        function loadValves(motorId) {
+            $.ajax({
+                url: API_BASE_URL + `motors/${motorId}/valve-status/`,
+                type: 'GET',
+                success: function(data) {
+                    renderValves(data);
+                },
+                error: function(xhr) {
+                    $('#valves-container').html(
+                        '<div class="alert alert-danger">Error loading valves. Please try again later.</div>'
+                    );
+                    console.error('Error loading valves:', xhr.responseText);
                 }
+            });
+        }
 
-                $('#valvesFormSection').show();
+        // Render valves
+        function renderValves(data) {
+            const valvesContainer = $('#valves-container');
+            valvesContainer.empty();
 
-                for (let i = 1; i <= vcount; i++) {
+            if (data.valve_count === 0) {
+                valvesContainer.html('<p>This motor has no valves.</p>');
+                return;
+            }
+
+            const valvesData = data.valves;
+            for (const [valveName, valveInfo] of Object.entries(valvesData)) {
+                const valveClass = valveInfo.status === 'On' ? 'valve-on' : 'valve-off';
+                const valveNumber = valveName.replace('V', '');
+
+                const valveElement = `
+                    <div class="valve-control ${valveClass}" id="valve-${valveNumber}">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6>${valveName}: <span class="valve-status">${valveInfo.status}</span></h6>
+                            <div>
+                                <button class="btn btn-success btn-sm turn-on-valve" data-valve="${valveNumber}">
+                                    <i class="fas fa-power-off"></i> On
+                                </button>
+                                <button class="btn btn-secondary btn-sm turn-off-valve" data-valve="${valveNumber}">
+                                    <i class="fas fa-power-off"></i> Off
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-2 small">
+                            Last operated: ${formatDate(valveInfo.last_operated)}
+                        </div>
+                    </div>
+                `;
+                valvesContainer.append(valveElement);
+            }
+
+            // Add event listeners for valve control
+            $('.turn-on-valve').click(function() {
+                const valveNumber = $(this).data('valve');
+                controlValve(currentMotorId, valveNumber, 'on');
+            });
+
+            $('.turn-off-valve').click(function() {
+                const valveNumber = $(this).data('valve');
+                controlValve(currentMotorId, valveNumber, 'off');
+            });
+        }
+
+        // Control a valve (turn on/off)
+        function controlValve(motorId, valveNumber, action) {
+            $.ajax({
+                url: API_BASE_URL + `motors/${motorId}/control-valve/${valveNumber}/`,
+                type: 'POST',
+                data: { action: action },
+                success: function(response) {
+                    // Update UI
+                    const valveElement = $(`#valve-${valveNumber}`);
+                    if (action === 'on') {
+                        valveElement.removeClass('valve-off').addClass('valve-on');
+                        valveElement.find('.valve-status').text('On');
+                    } else {
+                        valveElement.removeClass('valve-on').addClass('valve-off');
+                        valveElement.find('.valve-status').text('Off');
+                    }
+
+                    // Show success message
+                    showAlert('Success', response.message);
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Error controlling valve.';
+                    if (xhr.responseJSON && xhr.responseJSON.error) {
+                        errorMessage = xhr.responseJSON.error;
+                    }
+                    showAlert('Error', errorMessage);
+                    console.error('Error controlling valve:', xhr.responseText);
+                }
+            });
+        }
+
+        // Toggle motor status
+        function toggleMotorStatus() {
+            if (!currentMotorId) return;
+
+            $.ajax({
+                url: API_BASE_URL + `motors/${currentMotorId}/toggle-status/`,
+                type: 'POST',
+                success: function(response) {
+                    // Update UI
+                    if (response.motor_status === '1') {
+                        $('#detail-status').html('<span class="status-working">Working</span>');
+                    } else {
+                        $('#detail-status').html('<span class="status-idle">Idle</span>');
+                    }
+
+                    // Update the motors array
+                    const motorIndex = motors.findIndex(m => m.id === currentMotorId);
+                    if (motorIndex !== -1) {
+                        motors[motorIndex].STATUS = response.motor_status;
+                        motors[motorIndex].status_display = response.status_display;
+                    }
+
+                    // Re-render the table to reflect the status change
+                    renderMotorsTable(motors);
+
+                    // Show success message
+                    showAlert('Success', response.message);
+                },
+                error: function(xhr) {
+                    showAlert('Error', 'Error toggling motor status.');
+                    console.error('Error toggling motor status:', xhr.responseText);
+                }
+            });
+        }
+
+        // Open the motor form (add or edit)
+        function openMotorForm(motor) {
+            // Reset form
+            $('#motorForm')[0].reset();
+            $('#valves-form-container').addClass('hidden');
+            $('#valves-form-inputs').empty();
+
+            if (motor) {
+                // Edit existing motor
+                $('#motorFormTitle').text('Edit Motor');
+                $('#motor-id').val(motor.id);
+                $('#motor-name').val(motor.name);
+                $('#motor-uin').val(motor.UIN);
+                $('#motor-type').val(motor.TYPE);
+                $('#motor-vcount').val(motor.VCOUNT);
+                $('#motor-status').val(motor.STATUS);
+
+                // If motor has valves, show valve settings
+                if (motor.VCOUNT > 0) {
+                    updateValveFormInputs();
+
+                    // Populate valve values if available
+                    if (motor.valves && motor.valves.length > 0) {
+                        motor.valves.forEach(valve => {
+                            $(`#valve-${valve.valve_number}-value`).val(valve.value);
+                        });
+                    }
+                }
+            } else {
+                // Add new motor
+                $('#motorFormTitle').text('Add New Motor');
+                $('#motor-id').val('');
+                $('#motor-vcount').val(0);
+            }
+
+            motorFormModal.show();
+        }
+
+        // Update valve form inputs based on valve count
+        function updateValveFormInputs() {
+            const valveCount = parseInt($('#motor-vcount').val()) || 0;
+            const valvesContainer = $('#valves-form-inputs');
+            valvesContainer.empty();
+
+            if (valveCount > 0) {
+                $('#valves-form-container').removeClass('hidden');
+
+                for (let i = 1; i <= Math.min(valveCount, 4); i++) {
                     const valveInput = `
-                        <div class="valve-input">
-                            <label for="V${i}">V${i}:</label>
-                            <select class="form-select" id="V${i}" name="V${i}">
+                        <div class="mb-3">
+                            <label for="valve-${i}-value" class="form-label">Valve ${i} Status</label>
+                            <select class="form-select" id="valve-${i}-value" name="V${i}">
                                 <option value="0">Off</option>
                                 <option value="1">On</option>
                             </select>
                         </div>
                     `;
-                    container.append(valveInput);
+                    valvesContainer.append(valveInput);
                 }
+            } else {
+                $('#valves-form-container').addClass('hidden');
+            }
+        }
+
+        // Save motor (create or update)
+        function saveMotor() {
+            const motorId = $('#motor-id').val();
+            const isEdit = !!motorId;
+
+            // Collect form data
+            const formData = {
+                name: $('#motor-name').val(),
+                UIN: $('#motor-uin').val(),
+                TYPE: $('#motor-type').val(),
+                VCOUNT: parseInt($('#motor-vcount').val()),
+                STATUS: $('#motor-status').val()
+            };
+
+            // Add valve data if applicable
+            const valveCount = Math.min(formData.VCOUNT, 4);
+            for (let i = 1; i <= valveCount; i++) {
+                formData[`V${i}`] = $(`#valve-${i}-value`).val() || "0";
             }
 
-            function resetForm() {
-                // Reset form values
-                $('#motorId').val('');
-                $('#formTitle').text('Add New Motor');
-                $('#motorCreateForm')[0].reset();
+            // Determine URL and method based on whether this is an edit or create
+            const url = isEdit
+                ? API_BASE_URL + `motors/${motorId}/`
+                : API_BASE_URL + 'motors/';
+            const method = isEdit ? 'PUT' : 'POST';
 
-                // Reset valve inputs
-                $('#valveInputsContainer').empty();
-                $('#valvesFormSection').hide();
-            }
+            $.ajax({
+                url: url,
+                type: method,
+                contentType: 'application/json',
+                data: JSON.stringify(formData),
+                success: function(response) {
+                    motorFormModal.hide();
+                    showAlert('Success', isEdit ? 'Motor updated successfully.' : 'Motor created successfully.');
+                    loadMotors();
 
-            function showNotification(message, type) {
-                const notification = $('#notification');
-                notification.text(message);
-                notification.removeClass('success error').addClass(type);
-                notification.show();
-
-                // Hide notification after 5 seconds
-                setTimeout(function() {
-                    notification.hide();
-                }, 5000);
-            }
-
-            function showLoading(elementId, show) {
-                if (show) {
-                    $(`#${elementId}`).show();
-                } else {
-                    $(`#${elementId}`).hide();
+                    // If we're editing the currently displayed motor, reload its details
+                    if (isEdit && currentMotorId === parseInt(motorId)) {
+                        loadMotorDetails(parseInt(motorId));
+                    }
+                },
+                error: function(xhr) {
+                    let errorMessage = 'Error saving motor.';
+                    if (xhr.responseJSON) {
+                        // Format validation errors
+                        errorMessage = '';
+                        for (const field in xhr.responseJSON) {
+                            errorMessage += `${field}: ${xhr.responseJSON[field].join(' ')}<br>`;
+                        }
+                    }
+                    showAlert('Error', errorMessage);
+                    console.error('Error saving motor:', xhr.responseText);
                 }
-            }
+            });
+        }
 
-            function getErrorMessage(xhr) {
-                if (xhr.responseJSON && xhr.responseJSON.error) {
-                    return xhr.responseJSON.error;
-                } else if (xhr.responseJSON && xhr.responseJSON.detail) {
-                    return xhr.responseJSON.detail;
-                } else if (xhr.statusText) {
-                    return xhr.statusText;
-                } else {
-                    return 'An unknown error occurred';
+        // Delete a motor
+        function deleteMotor(motorId) {
+            // If no motorId is provided, use the current motor id
+            if (!motorId) motorId = currentMotorId;
+            if (!motorId) return;
+
+            $.ajax({
+                url: API_BASE_URL + `motors/${motorId}/`,
+                type: 'DELETE',
+                success: function() {
+                    showAlert('Success', 'Motor deleted successfully.');
+
+                    // Hide motor details if we're deleting the current motor
+                    if (currentMotorId === motorId) {
+                        $('#motor-details-container').addClass('hidden');
+                        motorDetailsVisible = false;
+                        currentMotorId = null;
+                    }
+
+                    loadMotors();
+                },
+                error: function(xhr) {
+                    showAlert('Error', 'Error deleting motor.');
+                    console.error('Error deleting motor:', xhr.responseText);
                 }
-            }
-        });
+            });
+        }
+
+        // Show confirmation modal
+        function showConfirmation(message, confirmCallback) {
+            $('#confirmation-message').html(message);
+            $('#confirmActionBtn').off('click').on('click', function() {
+                confirmationModal.hide();
+                confirmCallback();
+            });
+            confirmationModal.show();
+        }
+
+        // Show alert modal
+        function showAlert(title, message) {
+            $('#alert-title').text(title);
+            $('#alert-message').html(message);
+            alertModal.show();
+        }
+
+        // Format date for display
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
     </script>
 </body>
 </html>
