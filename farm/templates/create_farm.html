@@ -124,23 +124,69 @@
 <!--        }-->
 
 <!--        function saveFarm() {-->
-<!--            const farmId = $('#farm-edit-id').val();-->
-<!--            const motors = [];-->
-<!--            for (let i = 1; i <= motorCount; i++) {-->
-<!--                const motorDiv = $(`#motor-${i}`);-->
-<!--                if (motorDiv.length) {-->
-<!--                    const valveCount = parseInt($(`#valve-count-${i}`).val());-->
-<!--                    if (isNaN(valveCount) || valveCount < 1) {-->
-<!--                        alert(`Please enter a valid valve count for motor ${i}`);-->
-<!--                        return;-->
-<!--                    }-->
-<!--                    motors.push({-->
-<!--                        id: $(`#motor-id-${i}`).val() || undefined,-->
-<!--                        motor_type: $(`#motor-type-${i}`).val(),-->
-<!--                        valve_count: valveCount-->
-<!--                    });-->
-<!--                }-->
-<!--            }-->
+<!--    const farmId = $('#farm-edit-id').val();-->
+<!--    const motors = [];-->
+
+<!--    // Collect motor information from all motor input fields-->
+<!--    $('#motor-inputs .motor-input').each(function() {-->
+<!--        const motorTypeSelect = $(this).find('select[id^="motor-type-"]');-->
+<!--        const valveCountInput = $(this).find('input[id^="valve-count-"]');-->
+<!--        const motorIdInput = $(this).find('input[id^="motor-id-"]');-->
+
+<!--        const motorType = motorTypeSelect.val();-->
+<!--        const valveCount = parseInt(valveCountInput.val());-->
+<!--        const motorId = motorIdInput.val();-->
+
+<!--        // Validate valve count-->
+<!--        if (isNaN(valveCount) || valveCount < 1) {-->
+<!--            alert(`Please enter a valid valve count for motor`);-->
+<!--            return false;-->
+<!--        }-->
+
+<!--        motors.push({-->
+<!--            id: motorId || undefined,  // Use undefined if no ID-->
+<!--            motor_type: motorType,-->
+<!--            valve_count: valveCount-->
+<!--        });-->
+<!--    });-->
+
+<!--    // Check if any motors were added-->
+<!--    if (motors.length === 0) {-->
+<!--        alert('Please add at least one motor');-->
+<!--        return;-->
+<!--    }-->
+
+<!--    const farmData = {-->
+<!--        name: $('#farm-name').val() || 'Unnamed Farm',-->
+<!--        location: $('#farm-location').val() || 'Unknown Location',-->
+<!--        owner: parseInt($('#farm-owner').val()),-->
+<!--        motors: motors-->
+<!--    };-->
+
+<!--    console.log('Sending farm data:', JSON.stringify(farmData, null, 2));-->
+
+<!--    const method = farmId ? 'PUT' : 'POST';-->
+<!--    const url = farmId ? `${API_BASE_URL}farms/${farmId}/` : `${API_BASE_URL}farms/`;-->
+
+<!--    $.ajax({-->
+<!--        url: url,-->
+<!--        method: method,-->
+<!--        contentType: 'application/json',-->
+<!--        data: JSON.stringify(farmData),-->
+<!--        success: function(response) {-->
+<!--            console.log('Received response:', JSON.stringify(response, null, 2));-->
+<!--            alert(`Farm ${farmId ? 'updated' : 'created'} with ID: ${response.id} and ${motors.length} motors`);-->
+<!--            displayFarmData(response);-->
+<!--            listFarms();-->
+<!--            resetForm();-->
+<!--        },-->
+<!--        error: function(xhr) {-->
+<!--            console.error('Error:', xhr.responseText);-->
+<!--            $('#farm-data').html(`<pre>Error: ${xhr.responseText}</pre>`);-->
+<!--            alert('Error saving farm: ' + xhr.responseText);-->
+<!--        }-->
+<!--    });-->
+<!--}-->
 
 <!--            if (motors.length === 0) {-->
 <!--                alert('Please add at least one motor');-->
@@ -396,528 +442,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Farm Management Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Farm Management</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'dashboard-primary': '#10B981',
-                        'dashboard-secondary': '#34D399',
-                        'dashboard-background': '#F3F4F6',
-                        'card-background': '#FFFFFF'
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin-bottom: 20px; }
+        .valve { margin: 5px; }
+        button { padding: 5px 10px; cursor: pointer; }
+        #farm-data, #farm-list { border: 1px solid #ccc; padding: 10px; }
+        .motor-input { margin: 10px 0; padding: 10px; border: 1px solid #eee; }
+        pre { background: #f4f4f4; padding: 10px; border-radius: 5px; }
+        .error { color: red; }
+        .farm-item, .motor-item { margin: 10px 0; }
     </style>
 </head>
-<body class="bg-dashboard-background text-gray-800 font-sans">
-    <div class="flex flex-col min-h-screen md:flex-row">
-        <!-- Sidebar -->
-        <div class="w-full md:w-64 bg-white shadow-md p-6 md:min-h-screen">
-            <div class="mb-6 md:mb-10">
-                <h1 class="text-xl md:text-2xl font-bold text-dashboard-primary">Farm Manager</h1>
-            </div>
-            <nav class="space-y-2">
-                <button id="dashboard-nav" class="nav-btn w-full text-left px-4 py-2 rounded hover:bg-dashboard-secondary/10 flex items-center">
-                    <svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                    Dashboard
-                </button>
-                <button id="farms-nav" class="nav-btn w-full text-left px-4 py-2 rounded hover:bg-dashboard-secondary/10 flex items-center">
-                    <svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 01-4.438-4.437l-.477-2.387a2 2 0 00-.547-1.022L6 5m8 8l-4-4m4 4v5h2.5a1.5 1.5 0 100-3H8a6 6 0 01-6-6V7a1 1 0 011-1h4.5a1.5 1.5 0 100-3H4a1 1 0 00-1 1v5a6 6 0 006 6h5v-2.5a1.5 1.5 0 013 0V19a2 2 0 01-2 2H11a2 2 0 01-2-2v-1"/></svg>
-                    Farms
-                </button>
-                <button id="motors-nav" class="nav-btn w-full text-left px-4 py-2 rounded hover:bg-dashboard-secondary/10 flex items-center">
-                    <svg class="h-5 w-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
-                    Motors
-                </button>
-            </nav>
+<body>
+    <h1>Farm Management System</h1>
+
+    <div class="section">
+        <h2>Create/Edit Farm</h2>
+        <input type="hidden" id="farm-edit-id">
+        <input type="text" id="farm-name" placeholder="Farm Name">
+        <input type="text" id="farm-location" placeholder="Location">
+        <select id="farm-owner">
+            <option value="">Select Owner</option>
+        </select>
+        <div id="owner-error" class="error"></div>
+
+        <div id="motors-container">
+            <h3>Motors</h3>
+            <div id="motor-inputs"></div>
+            <button type="button" onclick="addMotorInput()">Add Motor</button>
         </div>
 
-        <!-- Main Content Area -->
-        <div class="flex-1 p-4 md:p-10 overflow-x-auto">
-            <!-- Dashboard View -->
-            <div id="dashboard-view" class="space-y-6">
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
-                    <div class="bg-white shadow rounded-lg p-4 md:p-6">
-                        <h3 class="text-base md:text-lg font-semibold mb-4">Total Farms</h3>
-                        <div class="text-2xl md:text-3xl font-bold text-dashboard-primary" id="total-farms">0</div>
-                    </div>
-                    <div class="bg-white shadow rounded-lg p-4 md:p-6">
-                        <h3 class="text-base md:text-lg font-semibold mb-4">Total Motors</h3>
-                        <div class="text-2xl md:text-3xl font-bold text-dashboard-primary" id="total-motors">0</div>
-                    </div>
-                    <div class="bg-white shadow rounded-lg p-4 md:p-6">
-                        <h3 class="text-base md:text-lg font-semibold mb-4">Total Valves</h3>
-                        <div class="text-2xl md:text-3xl font-bold text-dashboard-primary" id="total-valves">0</div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                    <div class="bg-white shadow rounded-lg p-4 md:p-6">
-                        <h3 class="text-base md:text-lg font-semibold mb-4">Farms by Location</h3>
-                        <div class="chart-container">
-                            <canvas id="farms-location-chart"></canvas>
-                        </div>
-                    </div>
-                    <div class="bg-white shadow rounded-lg p-4 md:p-6">
-                        <h3 class="text-base md:text-lg font-semibold mb-4">Motor Types Distribution</h3>
-                        <div class="chart-container">
-                            <canvas id="motor-types-chart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white shadow rounded-lg p-4 md:p-6">
-                    <h3 class="text-base md:text-lg font-semibold mb-4">Recent Farms</h3>
-                    <div class="overflow-x-auto">
-                        <table class="w-full min-w-[500px]" id="recent-farms-table">
-                            <thead>
-                                <tr class="bg-dashboard-background">
-                                    <th class="p-3 text-left text-sm md:text-base">Farm Name</th>
-                                    <th class="p-3 text-left text-sm md:text-base">Location</th>
-                                    <th class="p-3 text-left text-sm md:text-base">Owner</th>
-                                    <th class="p-3 text-left text-sm md:text-base">Motors</th>
-                                </tr>
-                            </thead>
-                            <tbody id="recent-farms-body"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Farms View -->
-            <div id="farms-view" class="hidden space-y-6">
-                <div class="bg-white shadow rounded-lg p-4 md:p-6">
-                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-                        <h2 class="text-xl md:text-2xl font-bold">Farm Management</h2>
-                        <button onclick="showCreateFarmModal()" class="mt-4 md:mt-0 bg-dashboard-primary text-white px-4 py-2 rounded hover:bg-dashboard-primary/90">Create New Farm</button>
-                    </div>
-                    <div class="mb-6">
-                        <input type="text" id="farm-search" placeholder="Search farms..." class="w-full md:w-1/2 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-dashboard-primary">
-                    </div>
-                    <div class="overflow-x-auto">
-                        <div id="farms-list" class="space-y-4"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Motors View -->
-            <div id="motors-view" class="hidden space-y-6">
-                <div class="bg-white shadow rounded-lg p-4 md:p-6">
-                    <h2 class="text-xl md:text-2xl font-bold mb-6">Motor Management</h2>
-                    <div class="overflow-x-auto">
-                        <div id="motors-list" class="space-y-4"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        <button onclick="saveFarm()">Save Farm</button>
     </div>
 
-    <!-- Create Farm Modal -->
-    <div id="create-farm-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-6 rounded-lg w-full max-w-lg">
-            <h3 class="text-lg font-semibold mb-4">Create New Farm</h3>
-            <form id="create-farm-form" class="space-y-4">
-                <input type="text" id="create-farm-name" placeholder="Farm Name" class="w-full p-2 border rounded">
-                <input type="text" id="create-farm-location" placeholder="Location" class="w-full p-2 border rounded">
-                <select id="create-farm-owner" class="w-full p-2 border rounded">
-                    <option value="">Select Owner</option>
-                </select>
-                <div id="create-motors-container">
-                    <div id="create-motor-inputs" class="space-y-2"></div>
-                    <button type="button" onclick="addMotorInput('create')" class="mt-2 bg-dashboard-primary text-white px-4 py-2 rounded">Add Motor</button>
-                </div>
-                <div class="flex justify-end space-x-2">
-                    <button type="button" onclick="hideCreateFarmModal()" class="px-4 py-2 border rounded">Cancel</button>
-                    <button type="button" onclick="saveFarm('create')" class="bg-dashboard-primary text-white px-4 py-2 rounded">Save</button>
-                </div>
-            </form>
-        </div>
+    <div class="section">
+        <h2>Farm List</h2>
+        <button onclick="listFarms()">Refresh Farm List</button>
+        <div id="farm-list"></div>
     </div>
 
-    <!-- Edit Farm Modal -->
-    <div id="edit-farm-modal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center">
-        <div class="bg-white p-6 rounded-lg w-full max-w-lg">
-            <h3 class="text-lg font-semibold mb-4">Edit Farm</h3>
-            <form id="edit-farm-form" class="space-y-4">
-                <input type="hidden" id="edit-farm-id">
-                <input type="text" id="edit-farm-name" placeholder="Farm Name" class="w-full p-2 border rounded">
-                <input type="text" id="edit-farm-location" placeholder="Location" class="w-full p-2 border rounded">
-                <select id="edit-farm-owner" class="w-full p-2 border rounded">
-                    <option value="">Select Owner</option>
-                </select>
-                <div id="edit-motors-container">
-                    <div id="edit-motor-inputs" class="space-y-2"></div>
-                    <button type="button" onclick="addMotorInput('edit')" class="mt-2 bg-dashboard-primary text-white px-4 py-2 rounded">Add Motor</button>
-                </div>
-                <div class="flex justify-end space-x-2">
-                    <button type="button" onclick="hideEditFarmModal()" class="px-4 py-2 border rounded">Cancel</button>
-                    <button type="button" onclick="saveFarm('edit')" class="bg-dashboard-primary text-white px-4 py-2 rounded">Save</button>
-                </div>
-            </form>
-        </div>
+    <div class="section">
+        <h2>Farm Data</h2>
+        <input type="number" id="farm-id" placeholder="Farm ID">
+        <button onclick="getFarmData()">Get Farm Data</button>
+        <div id="farm-data"></div>
     </div>
 
     <script>
         const API_BASE_URL = 'http://127.0.0.1:8000/farm/';
-        let farmsLocationChart, motorTypesChart;
 
-        // Navigation Logic
-        $('.nav-btn').click(function() {
-            $('#dashboard-view, #farms-view, #motors-view').addClass('hidden');
-            $('.nav-btn').removeClass('bg-dashboard-secondary/10 font-bold');
-            $(this).addClass('bg-dashboard-secondary/10 font-bold');
-            if (this.id === 'dashboard-nav') {
-                $('#dashboard-view').removeClass('hidden');
-                loadDashboardData();
-            } else if (this.id === 'farms-nav') {
-                $('#farms-view').removeClass('hidden');
-                listFarms();
-            } else if (this.id === 'motors-nav') {
-                $('#motors-view').removeClass('hidden');
-                listMotors();
-            }
-        });
-
-        function loadDashboardData() {
-            $.ajax({
-                url: `${API_BASE_URL}farms/`,
-                method: 'GET',
-                success: function(farms) {
-                    $('#total-farms').text(farms.length);
-                    const totalMotors = farms.reduce((sum, farm) => sum + (farm.motors ? farm.motors.length : 0), 0);
-                    $('#total-motors').text(totalMotors);
-                    const totalValves = farms.reduce((sum, farm) => sum + farm.motors.reduce((vSum, motor) => vSum + (motor.valves ? motor.valves.length : 0), 0), 0);
-                    $('#total-valves').text(totalValves);
-
-                    // Destroy previous charts if they exist
-                    if (farmsLocationChart) farmsLocationChart.destroy();
-                    if (motorTypesChart) motorTypesChart.destroy();
-
-                    const locationCounts = farms.reduce((counts, farm) => {
-                        counts[farm.location] = (counts[farm.location] || 0) + 1;
-                        return counts;
-                    }, {});
-                    farmsLocationChart = new Chart(document.getElementById('farms-location-chart'), {
-                        type: 'pie',
-                        data: {
-                            labels: Object.keys(locationCounts),
-                            datasets: [{
-                                data: Object.values(locationCounts),
-                                backgroundColor: ['#10B981', '#34D399', '#6EE7B7', '#4ADE80', '#22D3EE', '#38BDF8']
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: { legend: { position: 'top' } }
-                        }
-                    });
-
-                    const motorTypeCounts = farms.reduce((counts, farm) => {
-                        farm.motors.forEach(motor => {
-                            counts[motor.motor_type] = (counts[motor.motor_type] || 0) + 1;
-                        });
-                        return counts;
-                    }, {});
-                    motorTypesChart = new Chart(document.getElementById('motor-types-chart'), {
-                        type: 'doughnut',
-                        data: {
-                            labels: Object.keys(motorTypeCounts),
-                            datasets: [{
-                                data: Object.values(motorTypeCounts),
-                                backgroundColor: ['#10B981', '#34D399', '#6EE7B7']
-                            }]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: { legend: { position: 'top' } }
-                        }
-                    });
-
-                    const recentFarms = farms.slice(-5).reverse();
-                    const farmBody = $('#recent-farms-body');
-                    farmBody.empty();
-                    recentFarms.forEach(farm => {
-                        farmBody.append(`
-                            <tr class="border-b">
-                                <td class="p-3 text-sm md:text-base">${farm.name}</td>
-                                <td class="p-3 text-sm md:text-base">${farm.location}</td>
-                                <td class="p-3 text-sm md:text-base">${farm.owner}</td>
-                                <td class="p-3 text-sm md:text-base">${farm.motors ? farm.motors.length : 0}</td>
-                            </tr>
-                        `);
-                    });
-                }
-            });
-        }
-
-        function listFarms(searchTerm = '') {
-            $.ajax({
-                url: `${API_BASE_URL}farms/`,
-                method: 'GET',
-                success: function(farms) {
-                    let filteredFarms = farms;
-                    if (searchTerm) {
-                        filteredFarms = farms.filter(farm =>
-                            farm.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            farm.location.toLowerCase().includes(searchTerm.toLowerCase())
-                        );
-                    }
-                    let html = '';
-                    filteredFarms.forEach(farm => {
-                        html += `
-                            <div class="bg-dashboard-background p-4 rounded-lg">
-                                <h3 class="font-semibold text-lg">${farm.name} - ${farm.location}</h3>
-                                <p class="text-sm">Owner ID: ${farm.owner || 'Not assigned'}</p>
-                                <p class="text-sm">Motors: ${farm.motors.length}</p>
-                                <div class="mt-2 flex space-x-2">
-                                    <button onclick="editFarm(${farm.id})" class="bg-dashboard-primary text-white px-3 py-1 rounded hover:bg-dashboard-primary/90">Edit</button>
-                                    <button onclick="deleteFarm(${farm.id})" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    $('#farms-list').html(html || '<p class="text-gray-500">No farms found</p>');
-                }
-            });
-        }
-
-        function listMotors() {
-            $.ajax({
-                url: `${API_BASE_URL}farms/`,
-                method: 'GET',
-                success: function(farms) {
-                    const motorsList = $('#motors-list');
-                    motorsList.empty();
-                    farms.forEach(farm => {
-                        if (farm.motors && farm.motors.length > 0) {
-                            let farmMotorsHtml = `
-                                <div class="bg-dashboard-background p-4 rounded-lg">
-                                    <h3 class="font-semibold text-lg mb-4">${farm.name} - ${farm.location}</h3>
-                                    <div class="space-y-4">
-                            `;
-                            farm.motors.forEach(motor => {
-                                let valvesHtml = motor.valves && motor.valves.length > 0 ?
-                                    motor.valves.map(valve => `
-                                        <div class="flex items-center space-x-2">
-                                            <span class="text-sm">${valve.name} (ID: ${valve.id}) - ${valve.is_active ? 'Active' : 'Inactive'}</span>
-                                            <button onclick="toggleValve(${valve.id}, ${valve.is_active}, ${motor.id}, ${farm.id})" class="text-sm bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600">
-                                                Toggle
-                                            </button>
-                                        </div>
-                                    `).join('') : '<p class="text-sm text-gray-500">No valves</p>';
-
-                                farmMotorsHtml += `
-                                    <div class="bg-white p-3 rounded-lg shadow">
-                                        <h4 class="font-medium text-base mb-2">Motor ${motor.id}</h4>
-                                        <p class="text-sm">Type: ${motor.motor_type}</p>
-                                        <p class="text-sm">Valve Count: ${motor.valve_count}</p>
-                                        <div class="mt-2 space-y-2">${valvesHtml}</div>
-                                        <div class="mt-3 flex space-x-2">
-                                            <button onclick="editMotor(${motor.id}, ${farm.id})" class="bg-dashboard-primary text-white px-3 py-1 rounded hover:bg-dashboard-primary/90">Edit</button>
-                                            <button onclick="deleteMotor(${motor.id}, ${farm.id})" class="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600">Delete</button>
-                                        </div>
-                                    </div>
-                                `;
-                            });
-                            farmMotorsHtml += `
-                                    </div>
-                                </div>
-                            `;
-                            motorsList.append(farmMotorsHtml);
-                        }
-                    });
-                    if (motorsList.children().length === 0) {
-                        motorsList.html('<p class="text-gray-500">No motors found</p>');
-                    }
-                }
-            });
-        }
-
-        // Modal Controls
-        function showCreateFarmModal() {
-            $('#create-farm-modal').removeClass('hidden');
-            resetForm('create');
-        }
-
-        function hideCreateFarmModal() {
-            $('#create-farm-modal').addClass('hidden');
-        }
-
-        function showEditFarmModal() {
-            $('#edit-farm-modal').removeClass('hidden');
-        }
-
-        function hideEditFarmModal() {
-            $('#edit-farm-modal').addClass('hidden');
-        }
-
-        // Motor Input Management
-        let createMotorCount = 0;
-        let editMotorCount = 0;
-
-        function addMotorInput(type) {
-            const count = type === 'create' ? ++createMotorCount : ++editMotorCount;
-            const container = type === 'create' ? '#create-motor-inputs' : '#edit-motor-inputs';
-            const motorHtml = `
-                <div class="motor-input flex space-x-2" id="${type}-motor-${count}">
-                    <select id="${type}-motor-type-${count}" class="p-2 border rounded flex-1">
-                        <option value="single_phase">Single Phase</option>
-                        <option value="double_phase">Double Phase</option>
-                        <option value="triple_phase">Triple Phase</option>
-                    </select>
-                    <input type="number" id="${type}-valve-count-${count}" placeholder="Valve Count" min="1" class="p-2 border rounded w-24" required>
-                    <button type="button" onclick="$('#${type}-motor-${count}').remove()" class="bg-red-500 text-white px-2 py-1 rounded">Remove</button>
-                </div>
-            `;
-            $(container).append(motorHtml);
-        }
-
-        function saveFarm(type) {
-            const prefix = type === 'create' ? 'create' : 'edit';
-            const farmId = $(`#${prefix}-farm-id`).val();
-            const count = type === 'create' ? createMotorCount : editMotorCount;
-            const motors = [];
-            for (let i = 1; i <= count; i++) {
-                const motorDiv = $(`#${prefix}-motor-${i}`);
-                if (motorDiv.length) {
-                    const valveCount = parseInt($(`#${prefix}-valve-count-${i}`).val());
-                    if (isNaN(valveCount) || valveCount < 1) {
-                        alert(`Please enter a valid valve count for motor ${i}`);
-                        return;
-                    }
-                    motors.push({
-                        id: $(`#${prefix}-motor-id-${i}`).val() || undefined,
-                        motor_type: $(`#${prefix}-motor-type-${i}`).val(),
-                        valve_count: valveCount
-                    });
-                }
-            }
-
-            if (motors.length === 0) {
-                alert('Please add at least one motor');
-                return;
-            }
-
-            const farmData = {
-                name: $(`#${prefix}-farm-name`).val() || 'Unnamed Farm',
-                location: $(`#${prefix}-farm-location`).val() || 'Unknown Location',
-                owner: parseInt($(`#${prefix}-farm-owner`).val()),
-                motors: motors
-            };
-
-            const method = farmId ? 'PUT' : 'POST';
-            const url = farmId ? `${API_BASE_URL}farms/${farmId}/` : `${API_BASE_URL}farms/`;
-
-            $.ajax({
-                url: url,
-                method: method,
-                contentType: 'application/json',
-                data: JSON.stringify(farmData),
-                success: function(response) {
-                    alert(`Farm ${farmId ? 'updated' : 'created'} successfully`);
-                    listFarms();
-                    type === 'create' ? hideCreateFarmModal() : hideEditFarmModal();
-                },
-                error: function(xhr) {
-                    alert('Error saving farm: ' + xhr.responseText);
-                }
-            });
-        }
-
-        function resetForm(type) {
-            const prefix = type === 'create' ? 'create' : 'edit';
-            $(`#${prefix}-farm-id, #${prefix}-farm-name, #${prefix}-farm-location`).val('');
-            $(`#${prefix}-farm-owner`).val('');
-            $(`#${prefix}-motor-inputs`).empty();
-            if (type === 'create') createMotorCount = 0; else editMotorCount = 0;
-            addMotorInput(type);
-        }
-
-        function editFarm(farmId) {
-            $.ajax({
-                url: `${API_BASE_URL}farms/${farmId}/`,
-                method: 'GET',
-                success: function(farm) {
-                    $('#edit-farm-id').val(farm.id);
-                    $('#edit-farm-name').val(farm.name);
-                    $('#edit-farm-location').val(farm.location);
-                    $('#edit-farm-owner').val(farm.owner);
-                    $('#edit-motor-inputs').empty();
-                    editMotorCount = 0;
-                    farm.motors.forEach(motor => {
-                        addMotorInput('edit');
-                        $(`#edit-motor-type-${editMotorCount}`).val(motor.motor_type);
-                        $(`#edit-valve-count-${editMotorCount}`).val(motor.valve_count);
-                    });
-                    showEditFarmModal();
-                }
-            });
-        }
-
-        function deleteFarm(farmId) {
-            if (confirm('Are you sure you want to delete this farm?')) {
-                $.ajax({
-                    url: `${API_BASE_URL}farms/${farmId}/`,
-                    method: 'DELETE',
-                    success: function() {
-                        alert('Farm deleted');
-                        listFarms();
-                    }
-                });
-            }
-        }
-
-        function editMotor(motorId, farmId) {
-            editFarm(farmId);
-        }
-
-        function deleteMotor(motorId, farmId) {
-            if (confirm('Are you sure you want to delete this motor?')) {
-                $.ajax({
-                    url: `${API_BASE_URL}motors/${motorId}/`,
-                    method: 'DELETE',
-                    success: function() {
-                        alert('Motor deleted');
-                        listMotors();
-                        listFarms();
-                    }
-                });
-            }
-        }
-
-        function toggleValve(valveId, currentStatus, motorId, farmId) {
-            const newStatus = currentStatus ? 0 : 1;
-            $.ajax({
-                url: `${API_BASE_URL}valves/${valveId}/`,
-                method: 'PUT',
-                contentType: 'application/json',
-                data: JSON.stringify({ is_active: newStatus }),
-                success: function() {
-                    listMotors();
-                    listFarms();
-                },
-                error: function(xhr) {
-                    alert('Error toggling valve: ' + xhr.responseText);
-                }
-            });
-        }
-
-        // CSRF Token Setup
         function getCookie(name) {
             let cookieValue = null;
             if (document.cookie && document.cookie !== '') {
@@ -946,22 +522,317 @@
                 url: `http://127.0.0.1:8000/users/`,
                 method: 'GET',
                 success: function(users) {
-                    ['create-farm-owner', 'edit-farm-owner'].forEach(id => {
-                        const ownerSelect = $(`#${id}`);
-                        users.forEach(user => {
-                            ownerSelect.append(`<option value="${user.id}">${user.email} (${user.role})</option>`);
-                        });
+                    const ownerSelect = $('#farm-owner');
+                    if (!users || users.length === 0) {
+                        $('#owner-error').text('No users found');
+                        return;
+                    }
+                    users.forEach(user => {
+                        ownerSelect.append(
+                            `<option value="${user.id}">${user.email} (${user.role})</option>`
+                        );
                     });
+                    $('#owner-error').text('');
+                },
+                error: function(xhr) {
+                    $('#owner-error').text(`Failed to load owners: ${xhr.status} - ${xhr.statusText}`);
                 }
             });
-            addMotorInput('create');
-            addMotorInput('edit');
-            $('#dashboard-nav').click();
-
-            $('#farm-search').on('input', function() {
-                listFarms($(this).val());
-            });
+            addMotorInput();
+            listFarms();
         });
+
+        let motorCount = 0;
+
+        function addMotorInput(motor = null) {
+            motorCount++;
+            const motorHtml = `
+                <div class="motor-input" id="motor-${motorCount}">
+                    <input type="hidden" id="motor-id-${motorCount}" value="${motor?.id || ''}">
+                    <select id="motor-type-${motorCount}">
+                        <option value="single_phase" ${motor?.motor_type === 'single_phase' ? 'selected' : ''}>Single Phase</option>
+                        <option value="double_phase" ${motor?.motor_type === 'double_phase' ? 'selected' : ''}>Double Phase</option>
+                        <option value="triple_phase" ${motor?.motor_type === 'triple_phase' ? 'selected' : ''}>Triple Phase</option>
+                    </select>
+                    <input type="number" id="valve-count-${motorCount}" placeholder="Valve Count" min="1" required value="${motor?.valve_count || ''}">
+                    <button type="button" onclick="$('#motor-${motorCount}').remove()">Remove</button>
+                </div>
+            `;
+            $('#motor-inputs').append(motorHtml);
+        }
+
+        function saveFarm() {
+            const farmId = $('#farm-edit-id').val();
+            const motors = [];
+
+            // Collect motor information from all motor input fields
+            $('#motor-inputs .motor-input').each(function() {
+                const motorTypeSelect = $(this).find('select[id^="motor-type-"]');
+                const valveCountInput = $(this).find('input[id^="valve-count-"]');
+                const motorIdInput = $(this).find('input[id^="motor-id-"]');
+
+                const motorType = motorTypeSelect.val();
+                const valveCount = parseInt(valveCountInput.val());
+                const motorId = motorIdInput.val();
+
+                // Validate valve count
+                if (isNaN(valveCount) || valveCount < 1) {
+                    alert(`Please enter a valid valve count for motor`);
+                    return false;
+                }
+
+                motors.push({
+                    id: motorId || undefined,  // Use undefined if no ID
+                    motor_type: motorType,
+                    valve_count: valveCount
+                });
+            });
+
+            // Check if any motors were added
+            if (motors.length === 0) {
+                alert('Please add at least one motor');
+                return;
+            }
+
+            const farmData = {
+                name: $('#farm-name').val() || 'Unnamed Farm',
+                location: $('#farm-location').val() || 'Unknown Location',
+                owner: parseInt($('#farm-owner').val()),
+                motors: motors
+            };
+
+            console.log('Sending farm data:', JSON.stringify(farmData, null, 2));
+
+            const method = farmId ? 'PUT' : 'POST';
+            const url = farmId ? `${API_BASE_URL}farms/${farmId}/` : `${API_BASE_URL}farms/`;
+
+            $.ajax({
+                url: url,
+                method: method,
+                contentType: 'application/json',
+                data: JSON.stringify(farmData),
+                success: function(response) {
+                    console.log('Received response:', JSON.stringify(response, null, 2));
+                    alert(`Farm ${farmId ? 'updated' : 'created'} with ID: ${response.id} and ${motors.length} motors`);
+                    displayFarmData(response);
+                    listFarms();
+                    resetForm();
+                },
+                error: function(xhr) {
+                    console.error('Error:', xhr.responseText);
+                    $('#farm-data').html(`<pre>Error: ${xhr.responseText}</pre>`);
+                    alert('Error saving farm: ' + xhr.responseText);
+                }
+            });
+        }
+
+        function resetForm() {
+            $('#farm-edit-id').val('');
+            $('#farm-name, #farm-location').val('');
+            $('#farm-owner').val('');
+            $('#motor-inputs').empty();
+            motorCount = 0;
+            addMotorInput();
+        }
+
+        function listFarms() {
+            $.ajax({
+                url: `${API_BASE_URL}farms/`,
+                method: 'GET',
+                success: function(farms) {
+                    let html = '';
+                    farms.forEach(farm => {
+                        html += `
+                            <div class="farm-item">
+                                <h3>${farm.name} (ID: ${farm.id}) - ${farm.location}</h3>
+                                <p>Owner ID: ${farm.owner}</p>
+                                <button onclick="editFarm(${farm.id})">Edit</button>
+                                <button onclick="deleteFarm(${farm.id})">Delete</button>
+                                <div class="motor-list">
+                                    <h4>Motors:</h4>
+                                    ${farm.motors.map(motor => `
+                                        <div class="motor-item">
+                                            <p>Motor ${motor.id} (${motor.motor_type}) - ${motor.valve_count} valves</p>
+                                            <button onclick="editMotor(${motor.id}, ${farm.id})">Edit</button>
+                                            <button onclick="deleteMotor(${motor.id}, ${farm.id})">Delete</button>
+                                            <div class="valve-list" style="margin-left: 20px;">
+                                                ${motor.valves && motor.valves.length > 0 ?
+                                                    motor.valves.map(valve => `
+                                                        <div class="valve">
+                                                            ${valve.name} (ID: ${valve.id}) - Status: ${valve.is_active ? 'Active' : 'Inactive'}
+                                                            <button onclick="toggleValve(${valve.id}, ${valve.is_active})">Toggle</button>
+                                                        </div>
+                                                    `).join('') :
+                                                    '<p>No valves assigned</p>'
+                                                }
+                                            </div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `;
+                    });
+                    $('#farm-list').html(html);
+                },
+                error: function(xhr) {
+                    $('#farm-list').html(`<pre>Error: ${xhr.responseText}</pre>`);
+                }
+            });
+        }
+
+        function editFarm(farmId) {
+            $.ajax({
+                url: `${API_BASE_URL}farms/${farmId}/`,
+                method: 'GET',
+                success: function(farm) {
+                    $('#farm-edit-id').val(farm.id);
+                    $('#farm-name').val(farm.name);
+                    $('#farm-location').val(farm.location);
+                    $('#farm-owner').val(farm.owner);
+                    $('#motor-inputs').empty();
+                    motorCount = 0;
+                    farm.motors.forEach(motor => addMotorInput(motor));
+                },
+                error: function(xhr) {
+                    alert('Error loading farm: ' + xhr.responseText);
+                }
+            });
+        }
+
+        function deleteFarm(farmId) {
+            if (confirm('Are you sure you want to delete this farm?')) {
+                $.ajax({
+                    url: `${API_BASE_URL}farms/${farmId}/`,
+                    method: 'DELETE',
+                    success: function() {
+                        alert('Farm deleted');
+                        listFarms();
+                        resetForm();
+                    },
+                    error: function(xhr) {
+                        alert('Error deleting farm: ' + xhr.responseText);
+                    }
+                });
+            }
+        }
+
+        function editMotor(motorId, farmId) {
+            $.ajax({
+                url: `${API_BASE_URL}motors/${motorId}/`,
+                method: 'GET',
+                success: function(motor) {
+                    editFarm(farmId);
+                    setTimeout(() => {
+                        for (let i = 1; i <= motorCount; i++) {
+                            if ($(`#motor-id-${i}`).val() == motorId) {
+                                $(`#motor-type-${i}`).val(motor.motor_type);
+                                $(`#valve-count-${i}`).val(motor.valve_count);
+                                break;
+                            }
+                        }
+                    }, 100);
+                },
+                error: function(xhr) {
+                    alert('Error loading motor: ' + xhr.responseText);
+                }
+            });
+        }
+
+        function deleteMotor(motorId, farmId) {
+            if (confirm('Are you sure you want to delete this motor?')) {
+                $.ajax({
+                    url: `${API_BASE_URL}motors/${motorId}/`,
+                    method: 'DELETE',
+                    success: function() {
+                        alert('Motor deleted');
+                        listFarms();
+                        if ($('#farm-edit-id').val() == farmId) {
+                            editFarm(farmId);
+                        }
+                    },
+                    error: function(xhr) {
+                        alert('Error deleting motor: ' + xhr.responseText);
+                    }
+                });
+            }
+        }
+
+        function getFarmData() {
+            const farmId = $('#farm-id').val();
+            if (!farmId) {
+                $('#farm-data').html('<p>Please enter a Farm ID</p>');
+                return;
+            }
+            $.ajax({
+                url: `${API_BASE_URL}farms/${farmId}/`,
+                method: 'GET',
+                success: function(data) {
+                    displayFarmData(data);
+                },
+                error: function(xhr) {
+                    $('#farm-data').html(`<pre>Error: ${xhr.responseText}</pre>`);
+                }
+            });
+        }
+
+        function toggleValve(valveId, currentStatus) {
+            const newStatus = currentStatus === 1 ? 0 : 1;
+            // Find the valve element to get its current name
+            const valveElement = $(`#farm-data .valve:contains('(ID: ${valveId})')`);
+            const valveText = valveElement.text();
+            const valveNameMatch = valveText.match(/^(.*)\s\(ID:/);
+            const valveName = valveNameMatch ? valveNameMatch[1].trim() : `Valve ${valveId}`; // Fallback name if parsing fails
+
+            $.ajax({
+                url: `${API_BASE_URL}valves/${valveId}/`,
+                method: 'PUT',
+                contentType: 'application/json',
+                data: JSON.stringify({
+                    name: valveName,
+                    is_active: newStatus
+                }),
+                success: function(response) {
+                    console.log('Toggle response:', response);
+                    getFarmData(); // Refresh the farm data
+                    listFarms();   // Refresh the farm list as well
+                },
+                error: function(xhr) {
+                    console.log('Toggle error:', xhr.responseText);
+                    alert('Error toggling valve: ' + xhr.responseText);
+                }
+            });
+        }
+
+        function displayFarmData(data) {
+            let html = `<h3>${data.name} - ${data.location}</h3>`;
+            html += `<p>Owner ID: ${data.owner || 'Not assigned'}</p>`;
+
+            html += `<h4>Raw Response:</h4>`;
+            html += `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+
+            html += `<h4>Motors and Valves:</h4>`;
+            if (data.motors && data.motors.length > 0) {
+                data.motors.forEach(motor => {
+                    html += `<div class="motor">`;
+                    html += `<h4>Motor ${motor.id} (${motor.motor_type}) - ${motor.valve_count} valves</h4>`;
+                    if (motor.valves && motor.valves.length > 0) {
+                        motor.valves.forEach(valve => {
+                            html += `<div class="valve">`;
+                            html += `${valve.name} (ID: ${valve.id}) - Status: ${valve.is_active ? 'Active' : 'Inactive'}`;
+                            html += ` <button onclick="toggleValve(${valve.id}, ${valve.is_active})">Toggle</button>`;
+                            html += `</div>`;
+                        });
+                    } else {
+                        html += `<p>No valves assigned yet</p>`;
+                    }
+                    html += `</div>`;
+                });
+            } else {
+                html += `<p>No motors assigned to this farm</p>`;
+            }
+
+            $('#farm-data').html(html);
+        }
     </script>
 </body>
 </html>
