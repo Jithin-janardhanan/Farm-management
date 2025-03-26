@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-)6f__uu#eh50=fj-1hq-4hb40ziviarfs@7!bh!vchw_o#+fs^
 
 DEBUG = True
 CORS_ALLOW_ALL_ORIGINS = True
-ALLOWED_HOSTS = ['192.168.20.10', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['192.168.20.7', 'localhost', '127.0.0.1']
 
 # Application definition
 
@@ -150,7 +150,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.User'
 # Not recommended to store plaintext passwords
-MASTER_ADMIN_PASSWORD = 'your_secure_password_here'
+MASTER_ADMIN_PASSWORD = 'admin'
 
 AUTHENTICATION_BACKENDS = [
     'accounts.authentication.PhoneNumberBackend',  # Custom authentication backend

@@ -2,6 +2,7 @@
 from django.urls import path
 from rest_framework.authtoken.views import obtain_auth_token
 
+
 from .views import HomeView, admin_login_page, admin_dashboard_page, UserListCreateView, \
     UserRetrieveUpdateDestroyView, user_management_ui, UserLoginView, UserLogoutView, AdminLoginView, AdminSignupView, \
     SuperAdminSignupView, admin_signup_page, UserProfileView
