@@ -20,6 +20,7 @@ urlpatterns = [
     # Valve endpoints
     path('valves/', ValveListCreateView.as_view(), name='valve-list-create'),
     path('valves/<int:pk>/', ValveDetailView.as_view(), name='valve-detail'),
+
     path("farm-management/", TemplateView.as_view(template_name ='create_farm.html'), name='create_farm_page'),
 ]
 
