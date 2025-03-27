@@ -172,6 +172,7 @@
             motorCount++;
             const motorHtml = `
                 <div class="motor-input bg-gray-50 p-4 rounded-lg flex flex-col sm:flex-row gap-4 items-start" id="motor-${motorCount}">
+                    <input type="number" id="UIN-${motorCount}" value="${motor?.UIN || ''}" placeholder="UIN" class="w-full sm:w-1/4 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-farm-accent">
                     <input type="hidden" id="motor-id-${motorCount}" value="${motor?.id || ''}">
                     <select id="motor-type-${motorCount}" class="w-full sm:w-1/3 p-2 border rounded focus:outline-none focus:ring-2 focus:ring-farm-accent">
                         <option value="single_phase" ${motor?.motor_type === 'single_phase' ? 'selected' : ''}>Single Phase</option>
@@ -190,10 +191,12 @@
             const motors = [];
 
             $('#motor-inputs .motor-input').each(function() {
+                const motorUIN_Input = $(this).find('input[id^="UIN-"]'); // Corrected to target input
                 const motorTypeSelect = $(this).find('select[id^="motor-type-"]');
                 const valveCountInput = $(this).find('input[id^="valve-count-"]');
                 const motorIdInput = $(this).find('input[id^="motor-id-"]');
 
+                const motorUIN = motorUIN_Input.val();
                 const motorType = motorTypeSelect.val();
                 const valveCount = parseInt(valveCountInput.val());
                 const motorId = motorIdInput.val();
@@ -204,6 +207,7 @@
                 }
 
                 motors.push({
+                    UIN: motorUIN, // Matches backend key (assuming UIN is correct)
                     id: motorId || undefined,
                     motor_type: motorType,
                     valve_count: valveCount
@@ -327,6 +331,7 @@
                     setTimeout(() => {
                         for (let i = 1; i <= motorCount; i++) {
                             if ($(`#motor-id-${i}`).val() == motorId) {
+                                $(`#UIN-${i}`).val(motor.UIN);
                                 $(`#motor-type-${i}`).val(motor.motor_type);
                                 $(`#valve-count-${i}`).val(motor.valve_count);
                                 break;
