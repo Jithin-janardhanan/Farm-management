@@ -45,7 +45,7 @@
                 const password = $('#password').val();
 
                 $.ajax({
-                    url: '/api/admin/login/',
+                    url: `/adminpage/`,
                     type: 'POST',
                     contentType: 'application/json',
                     data: JSON.stringify({
@@ -62,8 +62,17 @@
                         window.location.href = '/admin-dashboard/';
                     },
                     error: function(xhr) {
-                        alert('Login failed: ' + xhr.responseJSON.error);
+                        let errorMessage = 'Login failed. Please try again.';
+
+                        if (xhr.responseJSON && xhr.responseJSON.error) {
+                            errorMessage = 'Login failed: ' + xhr.responseJSON.error;
+                        } else if (xhr.responseText) {
+                            errorMessage = 'Login failed: ' + xhr.responseText;
+                        }
+
+                        alert(errorMessage);
                     }
+
                 });
             });
 

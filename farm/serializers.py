@@ -28,7 +28,8 @@ class MotorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Motor
-        fields = ['id', 'motor_type', 'valve_count', 'valves', 'farm']
+        fields = ['id', 'motor_type', 'valve_count', 'valves', 'farm','UIN']
+
         extra_kwargs = {
             'farm': {'required': False}  # Make farm optional during creation
         }

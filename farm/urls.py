@@ -5,8 +5,8 @@ from django.views.generic import TemplateView
 from .views import (
     FarmListCreateView, FarmDetailView,
     MotorListCreateView, MotorDetailView,
-    ValveListCreateView, ValveDetailView,
-    UserFarmsView
+    ValveListCreateView, ValveDetailView, UserFarmsView
+
 )
 
 urlpatterns = [
@@ -21,9 +21,12 @@ urlpatterns = [
     # Valve endpoints
     path('valves/', ValveListCreateView.as_view(), name='valve-list-create'),
     path('valves/<int:pk>/', ValveDetailView.as_view(), name='valve-detail'),
+
     path("farm-management/", TemplateView.as_view(template_name ='create_farm.html'), name='create_farm_page'),
+  
     #userfarmview
     path('my-farms/', UserFarmsView.as_view(), name='user-farms'),
+
 ]
 
 

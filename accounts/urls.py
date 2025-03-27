@@ -10,9 +10,9 @@ from .views import HomeView, admin_login_page, admin_dashboard_page, UserListCre
 urlpatterns = [
 
 
-    path('api/admin/login/', AdminLoginView.as_view(), name='admin-login'),
+    # path('api/admin/loogin/', AdminLoginView.as_view(), name='admin-login'),
     path('api/admin/home/', HomeView.as_view(), name='admin-home'),
-    path('adminpage', admin_login_page, name='admin-login-page'),
+    path('adminpage/', admin_login_page, name='admin-login-page'),
     path('admin-dashboard/', admin_dashboard_page, name='admin-dashboard-page'),
 
     path('users/', UserListCreateView.as_view(), name='user-list'),
